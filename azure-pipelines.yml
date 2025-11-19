@@ -235,15 +235,14 @@ stages:
           #    filePath: './build.ps1'
           #    arguments: '-tasks merge'
           #    pwsh: true
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: 'Publish Code Coverage to Azure DevOps'
             inputs:
-              codeCoverageTool: 'JaCoCo'
               summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml'
               pathToSources: '$(Build.SourcesDirectory)/$(sourceFolderName)/'
-          - script: |
-              bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml"
-            displayName: 'Publish Code Coverage to Codecov.io'
+          # - script: |
+          #     bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml"
+          #   displayName: 'Publish Code Coverage to Codecov.io'
 
   - stage: Deploy
     dependsOn: Test
@@ -254,7 +253,7 @@ stages:
           eq(variables['Build.SourceBranch'], 'refs/heads/main'),
           startsWith(variables['Build.SourceBranch'], 'refs/tags/')
         ),
-        contains(variables['System.TeamFoundationCollectionUri'], 'gijsreyn')
+        contains(variables['System.TeamFoundationCollectionUri'], 'gijsreijn')
       )
     jobs:
       - job: Deploy_Module
