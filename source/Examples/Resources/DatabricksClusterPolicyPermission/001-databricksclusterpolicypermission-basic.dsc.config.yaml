@@ -1,0 +1,15 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure cluster policy permissions with single user
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Basic cluster policy permission
+      type: DatabricksDsc/DatabricksClusterPolicyPermission
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        ClusterPolicyId: '001CC22723A9379C'
+        AccessControlList:
+        - UserName: 'user@example.com'
+          PermissionLevel: 'CAN_USE'

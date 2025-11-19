@@ -1,0 +1,16 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create workspace user with all configurable properties
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Complete workspace user configuration
+      type: DatabricksDsc/DatabricksUser
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        UserName: 'user@example.com'
+        DisplayName: 'Example User'
+        Active: true
+        Roles:
+        - 'arn:aws:iam::123456789012:instance-profile/my-instance-profile'

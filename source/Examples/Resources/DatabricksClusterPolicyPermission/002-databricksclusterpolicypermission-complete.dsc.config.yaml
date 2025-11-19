@@ -1,0 +1,21 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure cluster policy permissions with multiple principals
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Complete cluster policy permission configuration
+      type: DatabricksDsc/DatabricksClusterPolicyPermission
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        ClusterPolicyId: '001CC22723A9379C'
+        AccessControlList:
+        - UserName: 'admin@example.com'
+          PermissionLevel: 'CAN_USE'
+        - ServicePrincipalName: 'my-service-principal'
+          PermissionLevel: 'CAN_USE'
+        - GroupName: 'data-engineers'
+          PermissionLevel: 'CAN_USE'
+        - GroupName: 'data-scientists'
+          PermissionLevel: 'CAN_USE'

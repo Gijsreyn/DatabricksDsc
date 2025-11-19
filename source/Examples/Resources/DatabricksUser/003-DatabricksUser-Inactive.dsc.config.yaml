@@ -1,0 +1,14 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create inactive workspace user
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Inactive workspace user
+      type: DatabricksDsc/DatabricksUser
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        UserName: 'inactive.user@example.com'
+        DisplayName: 'Inactive User'
+        Active: false

@@ -1,0 +1,18 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create account-level user with all configurable properties
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Complete account user configuration
+      type: DatabricksDsc/DatabricksAccountUser
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        UserName: 'admin@example.com'
+        DisplayName: 'Admin User'
+        Active: true
+        Roles:
+        - 'account_admin'
+        - 'workspace_creator'

@@ -1,0 +1,17 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure cluster policy permissions for groups
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Group-based cluster policy permissions
+      type: DatabricksDsc/DatabricksClusterPolicyPermission
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        ClusterPolicyId: '001CC22723A9379C'
+        AccessControlList:
+        - GroupName: 'data-engineers'
+          PermissionLevel: 'CAN_USE'
+        - GroupName: 'data-scientists'
+          PermissionLevel: 'CAN_USE'

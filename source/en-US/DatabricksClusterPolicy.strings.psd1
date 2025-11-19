@@ -1,0 +1,18 @@
+ConvertFrom-StringData @'
+    EvaluatingPolicyState = Evaluating cluster policy state for '{0}' in workspace '{1}'. (DCP0001)
+    PolicyNotFound = Cluster policy '{0}' not found in workspace. (DCP0002)
+    ErrorGettingPolicy = Error getting cluster policy '{0}': {1}. (DCP0003)
+    UpdatingPolicy = Updating cluster policy '{0}'. (DCP0004)
+    PolicyUpdated = Cluster policy '{0}' has been updated successfully. (DCP0005)
+    FailedToUpdatePolicy = Failed to update cluster policy '{0}': {1}. (DCP0006)
+    CreatingPolicy = Creating cluster policy '{0}'. (DCP0007)
+    PolicyCreated = Cluster policy '{0}' has been created successfully. (DCP0008)
+    FailedToCreatePolicy = Failed to create cluster policy '{0}': {1}. (DCP0009)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DCP0010)
+    RemovingPolicy = Removing cluster policy '{0}'. (DCP0011)
+    PolicyRemoved = Cluster policy '{0}' has been removed successfully. (DCP0012)
+    FailedToRemovePolicy = Failed to remove cluster policy '{0}': {1}. (DCP0013)
+    UpdateNotImplemented = Update functionality is not yet implemented for cluster policy '{0}'. (DCP0014)
+    DefinitionAndPolicyFamilyIdMutuallyExclusive = Cannot specify both 'Definition' and 'PolicyFamilyId' properties. They are mutually exclusive. (DCP0015)
+    TooManyLibraries = Too many libraries specified ({0}). Maximum allowed is 500. (DCP0016)
+'@

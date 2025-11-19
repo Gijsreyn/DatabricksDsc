@@ -1,0 +1,16 @@
+ConvertFrom-StringData @'
+    Get_DatabricksUser_GettingUserById = Getting user by ID '{0}'. (GDU0001)
+    Get_DatabricksUser_GettingUserByName = Getting user by username '{0}'. (GDU0002)
+    Get_DatabricksUser_GettingAllUsers = Getting all users from workspace. (GDU0003)
+    Get_DatabricksUser_ErrorGettingUser = Error getting user: {0}. (GDU0004)
+    New_DatabricksUser_CreatingUser = Creating user '{0}'. (NDU0001)
+    New_DatabricksUser_UserCreated = User '{0}' created successfully. (NDU0002)
+    New_DatabricksUser_ErrorCreatingUser = Error creating user '{0}': {1}. (NDU0003)
+    Set_DatabricksUser_UpdatingUser = Updating user with ID '{0}'. (SDU0001)
+    Set_DatabricksUser_UserUpdated = User with ID '{0}' updated successfully. (SDU0002)
+    Set_DatabricksUser_ErrorUpdatingUser = Error updating user '{0}': {1}. (SDU0003)
+    Remove_DatabricksUser_RemovingUser = Removing user with ID '{0}'. (RDU0001)
+    Remove_DatabricksUser_UserRemoved = User with ID '{0}' removed successfully. (RDU0002)
+    Remove_DatabricksUser_ErrorRemovingUser = Error removing user '{0}': {1}. (RDU0003)
+    InvalidTypeForCompare = Cannot compare objects of type '{0}' with objects of type '{1}'. (UT0001)
+'@

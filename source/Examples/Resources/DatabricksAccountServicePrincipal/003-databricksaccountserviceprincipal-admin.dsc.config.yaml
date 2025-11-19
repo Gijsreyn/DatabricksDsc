@@ -1,0 +1,17 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create account admin service principal
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Account administrator service principal
+      type: DatabricksDsc/DatabricksAccountServicePrincipal
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        ApplicationId: 'ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj'
+        DisplayName: 'Account Admin SP'
+        Active: true
+        Roles:
+        - 'account_admin'

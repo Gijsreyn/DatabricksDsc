@@ -1,0 +1,17 @@
+ConvertFrom-StringData @'
+    EvaluatingAccountUserState = Evaluating account user state for '{0}' in account '{1}'. (DACU0001)
+    AccountUserNotFound = Account user '{0}' not found in account. (DACU0002)
+    ErrorGettingAccountUser = Error getting account user '{0}': {1}. (DACU0003)
+    UpdatingAccountUser = Updating account user '{0}'. (DACU0004)
+    AccountUserUpdated = Account user '{0}' has been updated successfully. (DACU0005)
+    FailedToUpdateAccountUser = Failed to update account user '{0}': {1}. (DACU0006)
+    CreatingAccountUser = Creating account user '{0}'. (DACU0007)
+    AccountUserCreated = Account user '{0}' has been created successfully. (DACU0008)
+    FailedToCreateAccountUser = Failed to create account user '{0}': {1}. (DACU0009)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DACU0010)
+    RemovingAccountUser = Removing account user '{0}'. (DACU0011)
+    AccountUserRemoved = Account user '{0}' has been removed successfully. (DACU0012)
+    FailedToRemoveAccountUser = Failed to remove account user '{0}': {1}. (DACU0013)
+    InvalidAccountId = The AccountId '{0}' is not valid. It must be a valid GUID. (DACU0014)
+    InvalidUserName = The UserName '{0}' is not valid. It must be a valid email address. (DACU0015)
+'@

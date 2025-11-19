@@ -1,0 +1,16 @@
+ConvertFrom-StringData @'
+    EvaluatingUserState = Evaluating user state for '{0}' in workspace '{1}'. (DBU0001)
+    UserNotFound = User '{0}' not found in workspace. (DBU0002)
+    ErrorGettingUser = Error getting user '{0}': {1}. (DBU0003)
+    UpdatingUser = Updating user '{0}'. (DBU0004)
+    UserUpdated = User '{0}' has been updated successfully. (DBU0005)
+    FailedToUpdateUser = Failed to update user '{0}': {1}. (DBU0006)
+    CreatingUser = Creating user '{0}'. (DBU0007)
+    UserCreated = User '{0}' has been created successfully. (DBU0008)
+    FailedToCreateUser = Failed to create user '{0}': {1}. (DBU0009)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DBU0010)
+    InvalidUserName = The UserName '{0}' is not valid. It must be a valid email address. (DBU0011)
+    RemovingUser = Removing user '{0}'. (DBU0012)
+    UserRemoved = User '{0}' has been removed successfully. (DBU0013)
+    FailedToRemoveUser = Failed to remove user '{0}': {1}. (DBU0014)
+'@

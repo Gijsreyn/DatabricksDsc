@@ -1,0 +1,16 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create workspace service principal with all configurable properties
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Complete workspace service principal configuration
+      type: DatabricksDsc/DatabricksServicePrincipal
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        ApplicationId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+        DisplayName: 'My Service Principal'
+        Active: true
+        Roles:
+        - 'arn:aws:iam::123456789012:instance-profile/my-sp-profile'

@@ -1,0 +1,14 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create cluster policy with user limits
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Cluster policy with max clusters per user
+      type: DatabricksDsc/DatabricksClusterPolicy
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        Name: 'Limited User Policy'
+        Definition: '{"spark_version":{"type":"fixed","value":"13.3.x-scala2.12"}}'
+        MaxClustersPerUser: 2

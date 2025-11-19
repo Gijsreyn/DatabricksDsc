@@ -1,0 +1,14 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create inactive workspace service principal
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Inactive workspace service principal
+      type: DatabricksDsc/DatabricksServicePrincipal
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        ApplicationId: 'ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj'
+        DisplayName: 'Inactive Service Principal'
+        Active: false

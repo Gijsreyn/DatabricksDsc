@@ -1,0 +1,16 @@
+ConvertFrom-StringData @'
+    EvaluatingServicePrincipalState = Evaluating service principal state for '{0}' in workspace '{1}'. (DSP0001)
+    ServicePrincipalNotFound = Service principal '{0}' not found in workspace. (DSP0002)
+    ErrorGettingServicePrincipal = Error getting service principal '{0}': {1}. (DSP0003)
+    UpdatingServicePrincipal = Updating service principal '{0}'. (DSP0004)
+    ServicePrincipalUpdated = Service principal '{0}' has been updated successfully. (DSP0005)
+    FailedToUpdateServicePrincipal = Failed to update service principal '{0}': {1}. (DSP0006)
+    CreatingServicePrincipal = Creating service principal '{0}'. (DSP0007)
+    ServicePrincipalCreated = Service principal '{0}' has been created successfully. (DSP0008)
+    FailedToCreateServicePrincipal = Failed to create service principal '{0}': {1}. (DSP0009)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DSP0010)
+    RemovingServicePrincipal = Removing service principal '{0}'. (DSP0011)
+    ServicePrincipalRemoved = Service principal '{0}' has been removed successfully. (DSP0012)
+    FailedToRemoveServicePrincipal = Failed to remove service principal '{0}': {1}. (DSP0013)
+    InvalidApplicationId = The ApplicationId '{0}' is not valid. It must be a valid GUID. (DSP0014)
+'@
