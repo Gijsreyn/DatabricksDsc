@@ -1,16 +1,7 @@
 # DatabricksDsc
 
-<!-- Update what the product or function is called /-->
 This module contains DSC resources for the management and
-configuration of PRODUCT.
-
-<!-- Update with the correct definition number - replace 9999 with the definition number for the pipeline /-->
-[![Build Status](https://dev.azure.com/dsccommunity/DatabricksDsc/_apis/build/status/dsccommunity.DatabricksDsc?branchName=main)](https://dev.azure.com/dsccommunity/DatabricksDsc/_build/latest?definitionId=9999&branchName=main)
-![Azure DevOps coverage (branch)](https://img.shields.io/azure-devops/coverage/dsccommunity/DatabricksDsc/9999/main)
-[![codecov](https://codecov.io/gh/dsccommunity/DatabricksDsc/branch/main/graph/badge.svg)](https://codecov.io/gh/dsccommunity/DatabricksDsc)
-[![Azure DevOps tests](https://img.shields.io/azure-devops/tests/dsccommunity/DatabricksDsc/9999/main)](https://dsccommunity.visualstudio.com/DatabricksDsc/_test/analytics?definitionId=9999&contextType=build)
-[![PowerShell Gallery (with prereleases)](https://img.shields.io/powershellgallery/vpre/DatabricksDsc?label=DatabricksDsc%20Preview)](https://www.powershellgallery.com/packages/DatabricksDsc/)
-[![PowerShell Gallery](https://img.shields.io/powershellgallery/v/DatabricksDsc?label=DatabricksDsc)](https://www.powershellgallery.com/packages/DatabricksDsc/)
+configuration of Databricks resources focusing on Azure.
 
 ## Code of Conduct
 
