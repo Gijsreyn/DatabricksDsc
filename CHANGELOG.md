@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-19
+
 ### Added
 
 - Initial implementation of Databricks User management
@@ -93,23 +95,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Both account-level resources have `ExternalId` as read-only property
   - Updated help documentation for workspace-level resources to clarify scope
     and reference account-level alternatives
-
-### Changed
-
-- For changes in existing functionality.
-
-### Deprecated
-
-- For soon-to-be removed features.
-
-### Removed
-
-- For now removed features.
-
-### Fixed
-
-- For any bug fix.
-
-### Security
-
-- In case of vulnerabilities.
