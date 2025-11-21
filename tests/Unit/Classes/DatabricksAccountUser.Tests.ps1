@@ -674,6 +674,189 @@ Describe 'DatabricksAccountUser\BuildAccountUserPatchPayload()' -Tag 'BuildAccou
     }
 }
 
+Describe 'DatabricksAccountUser\BuildAccountUserPayload()' -Tag 'BuildAccountUserPayload' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockInstance = [DatabricksAccountUser] @{
+                WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                AccountId    = '12345678-1234-1234-1234-123456789012'
+                UserName     = 'testuser@example.com'
+            }
+        }
+    }
+
+    Context 'When building payload with DisplayName' {
+        It 'Should include displayName in payload' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.DisplayName = 'Test User'
+
+                $payload = $script:mockInstance.BuildAccountUserPayload(@{ DisplayName = 'Test User' })
+
+                $payload.displayName | Should -Be 'Test User'
+            }
+        }
+    }
+
+    Context 'When building payload with Active' {
+        It 'Should include active in payload' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Active = $true
+
+                $payload = $script:mockInstance.BuildAccountUserPayload(@{ Active = $true })
+
+                $payload.active | Should -BeTrue
+            }
+        }
+    }
+
+    Context 'When building payload with Emails' {
+        It 'Should include sorted emails in payload' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Emails = @(
+                    [UserEmail]@{
+                        Value   = 'test@example.com'
+                        Type    = 'work'
+                        Primary = $true
+                    }
+                )
+
+                $payload = $script:mockInstance.BuildAccountUserPayload(@{ Emails = $script:mockInstance.Emails })
+
+                $payload.emails | Should -HaveCount 1
+                $payload.emails[0].value | Should -Be 'test@example.com'
+                $payload.emails[0].type | Should -Be 'work'
+                $payload.emails[0].primary | Should -BeTrue
+            }
+        }
+    }
+
+    Context 'When building payload with Name' {
+        It 'Should include name in payload' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Name = [UserName]@{
+                    GivenName  = 'Test'
+                    FamilyName = 'User'
+                }
+
+                $payload = $script:mockInstance.BuildAccountUserPayload(@{ Name = $script:mockInstance.Name })
+
+                $payload.name.givenName | Should -Be 'Test'
+                $payload.name.familyName | Should -Be 'User'
+            }
+        }
+    }
+
+    Context 'When building payload with Roles' {
+        It 'Should include sorted roles in payload' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Roles = @(
+                    [UserRole]@{ Value = 'account_admin' }
+                )
+
+                $payload = $script:mockInstance.BuildAccountUserPayload(@{ Roles = $script:mockInstance.Roles })
+
+                $payload.roles | Should -HaveCount 1
+                $payload.roles[0].value | Should -Be 'account_admin'
+            }
+        }
+    }
+}
+
+Describe 'DatabricksAccountUser\Modify() Error Handling' -Tag 'ModifyErrors' {
+    Context 'When create fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountUser] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    UserName     = 'newuser@example.com'
+                } | Add-Member -Force -MemberType 'NoteProperty' -Name '_exist' -Value $false -PassThru
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error: User already exists'
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildAccountUserPayload' -Value {
+                        return @{ displayName = 'Test' }
+                    }
+            }
+        }
+
+        It 'Should throw with localized error message' {
+            InModuleScope -ScriptBlock {
+                {
+                    $script:mockInstance.Modify(@{ _exist = $true })
+                } | Should -Throw -ExpectedMessage '*Failed to create account user*newuser@example.com*'
+            }
+        }
+    }
+
+    Context 'When update fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountUser] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    UserName     = 'testuser@example.com'
+                    Id           = 'user-123'
+                } | Add-Member -Force -MemberType 'NoteProperty' -Name '_exist' -Value $true -PassThru
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error: Permission denied'
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildAccountUserPatchPayload' -Value {
+                        return @{ schemas = @(); Operations = @() }
+                    }
+            }
+        }
+
+        It 'Should throw with localized error message' {
+            InModuleScope -ScriptBlock {
+                {
+                    $script:mockInstance.Modify(@{ DisplayName = 'Test' })
+                } | Should -Throw -ExpectedMessage '*Failed to update account user*testuser@example.com*'
+            }
+        }
+    }
+
+    Context 'When delete fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountUser] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    UserName     = 'testuser@example.com'
+                    Id           = 'user-123'
+                } | Add-Member -Force -MemberType 'NoteProperty' -Name '_exist' -Value $true -PassThru
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error: Resource in use'
+                    }
+            }
+        }
+
+        It 'Should throw with localized error message' {
+            InModuleScope -ScriptBlock {
+                {
+                    $script:mockInstance.Modify(@{ _exist = $false })
+                } | Should -Throw -ExpectedMessage '*Failed to remove account user*testuser@example.com*'
+            }
+        }
+    }
+}
+
 Describe 'DatabricksAccountUser\AssertProperties()' -Tag 'AssertProperties' {
     BeforeAll {
         InModuleScope -ScriptBlock {
