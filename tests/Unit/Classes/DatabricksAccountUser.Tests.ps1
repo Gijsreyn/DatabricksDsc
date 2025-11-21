@@ -83,6 +83,13 @@ Describe 'DatabricksAccountUser' {
                 $instance.ExcludeDscProperties | Should -Contain 'ExternalId'
             }
         }
+
+        It 'Should have _exist default to true' {
+            InModuleScope -ScriptBlock {
+                $instance = [DatabricksAccountUser]::new()
+                $instance._exist | Should -Be $true
+            }
+        }
     }
 }
 
@@ -397,7 +404,7 @@ Describe 'DatabricksAccountUser\GetCurrentState()' -Tag 'GetCurrentState' {
                 $currentState.AccountId | Should -Be '12345678-1234-1234-1234-123456789012'
                 $currentState.UserName | Should -Be 'testuser@example.com'
                 $currentState._exist | Should -BeFalse
-                $script:mockInstance._exist | Should -BeFalse
+                $script:mockInstance._exist | Should -BeTrue
             }
         }
     }

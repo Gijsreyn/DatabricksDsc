@@ -1,0 +1,17 @@
+ConvertFrom-StringData @'
+    EvaluatingMetastoreAssignment = Evaluating metastore assignment for workspace '{0}' and metastore '{1}' in account '{2}'. (DAMA0001)
+    MetastoreAssignmentFound = Metastore '{0}' is currently assigned to workspace '{1}'. (DAMA0002)
+    NoMetastoreAssigned = No metastore is currently assigned to workspace '{0}'. (DAMA0003)
+    DifferentMetastoreAssigned = Workspace '{1}' is assigned to metastore '{0}', but desired metastore is '{2}'. (DAMA0004)
+    ErrorGettingMetastoreAssignment = Error getting metastore assignment for workspace '{0}': {1}. (DAMA0005)
+    AssigningMetastore = Assigning metastore '{0}' to workspace '{1}'. (DAMA0006)
+    MetastoreAssigned = Metastore '{0}' has been successfully assigned to workspace '{1}'. (DAMA0007)
+    FailedToAssignMetastore = Failed to assign metastore '{0}' to workspace '{1}': {2}. (DAMA0008)
+    UnassigningMetastore = Unassigning metastore '{0}' from workspace '{1}'. (DAMA0009)
+    MetastoreUnassigned = Metastore '{0}' has been successfully unassigned from workspace '{1}'. (DAMA0010)
+    FailedToUnassignMetastore = Failed to unassign metastore '{0}' from workspace '{1}': {2}. (DAMA0011)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DAMA0012)
+    InvalidAccountId = The AccountId '{0}' is not valid. It must be a valid GUID. (DAMA0013)
+    InvalidWorkspaceId = The WorkspaceId '{0}' is not valid. It must be numeric. (DAMA0014)
+    InvalidMetastoreId = The MetastoreId '{0}' is not valid. It must be a valid GUID. (DAMA0015)
+'@

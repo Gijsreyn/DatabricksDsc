@@ -5,6 +5,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `DatabricksAccountMetastoreAssignment` resource for managing Unity
+  Catalog metastore assignments to workspaces
+  - Manages workspace-to-metastore assignments at the account level
+  - Key properties: `AccountId`, `WorkspaceId`, and `MetastoreId`
+  - Supports assignment (create/update via PUT) and unassignment (DELETE)
+  - Uses account-level API endpoints:
+    - GET: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/metastore`
+    - POST: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/metastores`
+    - DELETE: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/metastores/{metastore_id}`
+  - Validates AccountId and MetastoreId as GUIDs, WorkspaceId as numeric
+  - Includes comprehensive unit tests with 25 test cases covering all methods
+    and scenarios
+- Added `DatabricksAccountResourceBase` intermediate base class for account-level
+  DSC resources
+  - Inherits from `DatabricksResourceBase` and provides specialized functionality
+    for account-level operations
+  - Introduces `AccountsUrl` property with default value `https://accounts.azuredatabricks.net`
+  - Constructor automatically sets `WorkspaceUrl` from `AccountsUrl` for base
+    class compatibility
+  - Simplifies configuration for account-level resources by providing sensible
+    defaults
+  - Account-level resources (`DatabricksAccountUser`, `DatabricksAccountServicePrincipal`,
+    `DatabricksAccountMetastoreAssignment`) now inherit from this base class
+- Added `_exist` property to all account-level resources
+  - `DatabricksAccountUser`, `DatabricksAccountServicePrincipal`, and
+    `DatabricksAccountMetastoreAssignment` now include the `_exist` property
+  - Defaults to `$true` for proper existence management
+  - Enables proper handling of resource presence/absence in desired state
+- Added configuration examples for `DatabricksAccountMetastoreAssignment` resource
+  - Example 001: Basic metastore assignment to workspace
+  - Example 002: Remove metastore assignment from workspace
+
+### Fixed
+
+- Fixed `DatabricksClusterPolicy` resource examples to use hashtable format
+  for the `Definition` property instead of JSON string
+  - Updated all three examples (basic, complete, and user limit) to demonstrate
+    proper hashtable usage with YAML syntax
+  - Makes examples more readable and easier to maintain
+- Fixed `DatabricksAccountMetastoreAssignment` to correctly parse API response
+  - Updated to handle nested `metastore_assignment` object structure from API
+  - Checks `$response.metastore_assignment.metastore_id` instead of flat structure
+  - Updated unit test mocks to match actual API response format
+
 ## [0.3.0] - 2025-11-21
 
 ### Added

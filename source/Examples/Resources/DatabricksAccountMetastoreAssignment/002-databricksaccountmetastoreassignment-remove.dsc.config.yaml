@@ -1,0 +1,14 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Remove metastore assignment from workspace
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Remove metastore assignment
+      type: DatabricksDsc/DatabricksAccountMetastoreAssignment
+      properties:
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        WorkspaceId: '1234567890123456'
+        MetastoreId: '87654321-4321-4321-4321-210987654321'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        _exist: false
