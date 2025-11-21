@@ -126,6 +126,133 @@ Describe 'DatabricksClusterPolicyPermission\Get()' -Tag 'Get' {
     }
 }
 
+Describe 'DatabricksClusterPolicyPermission\Test()' -Tag 'Test' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockInstance = [DatabricksClusterPolicyPermission] @{
+                WorkspaceUrl    = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                AccessToken     = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                ClusterPolicyId = 'test-policy-123'
+            }
+        }
+    }
+
+    Context 'When the system is in the desired state' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
+                        return $null
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'AssertProperties' -Value {
+                        return
+                    }
+            }
+        }
+
+        It 'Should return $true' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Test() | Should -BeTrue
+            }
+        }
+    }
+
+    Context 'When the system is not in the desired state' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
+                        return @(
+                            @{
+                                Property      = 'AccessControlList'
+                                ExpectedValue = 'Expected'
+                                ActualValue   = 'Actual'
+                            }
+                        )
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'AssertProperties' -Value {
+                        return
+                    }
+            }
+        }
+
+        It 'Should return $false' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Test() | Should -BeFalse
+            }
+        }
+    }
+}
+
+Describe 'DatabricksClusterPolicyPermission\Set()' -Tag 'Set' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockInstance = [DatabricksClusterPolicyPermission] @{
+                WorkspaceUrl    = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                AccessToken     = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                ClusterPolicyId = 'test-policy-123'
+            } |
+                Add-Member -Force -MemberType 'ScriptMethod' -Name 'Modify' -Value {
+                    $script:mockMethodModifyCallCount += 1
+                } -PassThru
+        }
+    }
+
+    BeforeEach {
+        InModuleScope -ScriptBlock {
+            $script:mockMethodModifyCallCount = 0
+        }
+    }
+
+    Context 'When the system is in the desired state' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
+                        return $null
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'AssertProperties' -Value {
+                        return
+                    }
+            }
+        }
+
+        It 'Should not call method Modify()' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Set()
+
+                $script:mockMethodModifyCallCount | Should -Be 0
+            }
+        }
+    }
+
+    Context 'When the system is not in the desired state' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
+                        return @{
+                            Property      = 'AccessControlList'
+                            ExpectedValue = 'Expected'
+                            ActualValue   = 'Actual'
+                        }
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'AssertProperties' -Value {
+                        return
+                    }
+            }
+        }
+
+        It 'Should call method Modify()' {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance.Set()
+
+                $script:mockMethodModifyCallCount | Should -Be 1
+            }
+        }
+    }
+}
+
 Describe 'DatabricksClusterPolicyPermission\GetCurrentState()' -Tag 'GetCurrentState' {
     Context 'When permissions exist with all principal types' {
         BeforeAll {

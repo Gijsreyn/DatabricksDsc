@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added DSC Export capability to `DatabricksResourceBase` class
+  - Added static `Export()` method to base class that provides guidance for
+    using the parameterized overload
+  - Added static `Export([FilteringInstance])` method that exports resources
+    with optional filtering based on instance properties
+  - Added virtual static methods `GetAllResourcesFromApi([Instance])` and
+    `CreateExportInstance([ApiData], [Instance])` that child classes override
+    to implement resource-specific export logic
+  - Implemented Export capability in `DatabricksUser` resource
+    - `GetAllResourcesFromApi()` retrieves all users from SCIM API endpoint
+      `/api/2.0/preview/scim/v2/Users`
+    - `CreateExportInstance()` converts API user data to `DatabricksUser`
+      instances with proper type conversion and sorting
+    - `Export([FilteringInstance])` supports filtering by UserName, DisplayName,
+      Active status, and other user properties
+  - Added comprehensive unit tests for Export functionality covering:
+    - API interaction and error handling
+    - Instance creation and property mapping
+    - Filtering logic with single and multiple filters
+    - Empty result handling
+- Improved unit test coverage for existing resources
+  - Added `BuildAccountUserPayload()` tests for `DatabricksAccountUser`
+  - Added error handling tests for `DatabricksAccountUser.Modify()` method
+    (create, update, and delete failure scenarios)
+  - Added `Test()` and `Set()` method tests for `DatabricksClusterPolicyPermission`
+  - Increased overall code coverage to ensure reliability
+
 ## [0.2.1] - 2025-11-19
 
 ### Added

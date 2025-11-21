@@ -111,4 +111,207 @@ class DatabricksResourceBase : ResourceBase
             return $null
         }
     }
+
+    <#
+        Virtual method for child classes to override and retrieve all resources from Databricks.
+
+        .PARAMETER Instance
+            An instance of the resource with WorkspaceUrl and AccessToken populated.
+
+        .RETURNS
+            Array of PSObjects representing the raw API response data.
+
+        .NOTES
+            Child classes must override this method to implement export functionality.
+            Return empty array if no resources found.
+            Throw exceptions for API errors - they will be caught by Export().
+    #>
+    static [PSObject[]] GetAllResourcesFromApi([DatabricksResourceBase] $Instance)
+    {
+        $resourceType = $Instance.GetType().Name
+        $errorMessage = $Instance.localizedData.ExportNotImplemented -f $resourceType
+
+        Write-Warning -Message $errorMessage
+        return @()
+    }
+
+    <#
+        Virtual method for child classes to override and convert API data to resource instances.
+
+        .PARAMETER ApiData
+            A PSCustomObject containing the raw API response data for a single resource.
+
+        .PARAMETER Instance
+            An instance of the resource with WorkspaceUrl and AccessToken populated.
+
+        .RETURNS
+            A resource instance populated with data from the API.
+
+        .NOTES
+            Child classes must override this method to implement export functionality.
+            The returned instance should have all relevant properties populated.
+    #>
+    static [DatabricksResourceBase] CreateExportInstance([PSObject] $ApiData, [DatabricksResourceBase] $Instance)
+    {
+        $resourceType = $Instance.GetType().Name
+        $errorMessage = $Instance.localizedData.ExportNotImplemented -f $resourceType
+
+        Write-Warning -Message $errorMessage
+        return $null
+    }
+
+    <#
+        Exports all resources of this type from the Databricks workspace.
+
+        .RETURNS
+            Array of resource instances representing all resources in the workspace.
+
+        .NOTES
+            Child classes must override GetAllResourcesFromApi() and CreateExportInstance()
+            for this method to function properly.
+    #>
+    static [DatabricksResourceBase[]] Export()
+    {
+        # Create a temporary instance to access instance methods and localization
+        $tempInstance = [DatabricksResourceBase]::new()
+        $resourceType = $tempInstance.GetType().Name
+
+        try
+        {
+            Write-Verbose -Message (
+                $tempInstance.localizedData.ExportingResources -f $resourceType
+            )
+
+            # Call virtual method to get all resources
+            $apiResources = [DatabricksResourceBase]::GetAllResourcesFromApi($tempInstance)
+
+            if ($null -eq $apiResources -or $apiResources.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $tempInstance.localizedData.NoResourcesFound -f $resourceType
+                )
+                return @()
+            }
+
+            # Convert each API resource to a resource instance
+            [DatabricksResourceBase[]] $result = $apiResources.ForEach{
+                [DatabricksResourceBase]::CreateExportInstance($_, $tempInstance)
+            }
+
+            Write-Verbose -Message (
+                $tempInstance.localizedData.ExportedResourceCount -f $result.Count, $resourceType
+            )
+
+            return $result
+        }
+        catch
+        {
+            $errorMessage = $tempInstance.localizedData.ExportFailed -f @(
+                $resourceType,
+                $_.Exception.Message
+            )
+
+            Write-Verbose -Message $errorMessage
+            return @()
+        }
+    }
+
+    <#
+        Exports resources from the Databricks workspace filtered by the provided instance.
+
+        .PARAMETER FilteringInstance
+            A resource instance with properties set to filter the export.
+            Only resources matching the filtering criteria will be returned.
+
+        .RETURNS
+            Array of resource instances matching the filter criteria.
+
+        .NOTES
+            Child classes must override GetAllResourcesFromApi() and CreateExportInstance()
+            for this method to function properly. The filtering logic should be implemented
+            in the child class's override.
+    #>
+    static [DatabricksResourceBase[]] Export([DatabricksResourceBase] $FilteringInstance)
+    {
+        # Validate required authentication properties
+        if ([string]::IsNullOrEmpty($FilteringInstance.WorkspaceUrl))
+        {
+            throw [System.ArgumentException]::new('WorkspaceUrl is required for Export. Set the WorkspaceUrl property on the instance before calling Export.')
+        }
+
+        if ($null -eq $FilteringInstance.AccessToken)
+        {
+            throw [System.ArgumentException]::new('AccessToken is required for Export. Set the AccessToken property on the instance before calling Export.')
+        }
+
+        $resourceType = $FilteringInstance.GetType().Name
+
+        try
+        {
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportingResourcesFiltered -f $resourceType
+            )
+
+            # Call virtual method to get all resources
+            $apiResources = [DatabricksResourceBase]::GetAllResourcesFromApi($FilteringInstance)
+
+            if ($null -eq $apiResources -or $apiResources.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.NoResourcesFound -f $resourceType
+                )
+                return @()
+            }
+
+            # Convert and filter resources
+            [DatabricksResourceBase[]] $allResources = $apiResources.ForEach{
+                [DatabricksResourceBase]::CreateExportInstance($_, $FilteringInstance)
+            }
+
+            # Apply filtering based on properties set in FilteringInstance
+            # This implements the pattern from ChocolateyPackage reference
+            $result = $allResources.Where{
+                $currentResource = $_
+                $matches = $true
+
+                # Get all properties from the filtering instance that have values
+                # Exclude common base properties and DSC framework properties
+                $filterProperties = $FilteringInstance.PSObject.Properties.Where{
+                    $_.Name -notin @('AccountHost', 'WorkspaceHost', 'AccessToken', 'Reasons', 'Ensure', 'localizedData') -and
+                    -not [string]::IsNullOrEmpty($_.Value)
+                }
+
+                # Check if all specified filter properties match
+                foreach ($property in $filterProperties)
+                {
+                    if ($currentResource.PSObject.Properties.Name -contains $property.Name)
+                    {
+                        if ($currentResource.($property.Name) -ne $property.Value)
+                        {
+                            $matches = $false
+                            break
+                        }
+                    }
+                }
+
+                $matches
+            }
+
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportedResourceCount -f $result.Count, $resourceType
+            )
+
+            return $result
+        }
+        catch
+        {
+            $errorMessage = $FilteringInstance.localizedData.ExportFailed -f @(
+                $resourceType,
+                $_.Exception.Message
+            )
+
+            Write-Verbose -Message $errorMessage
+            return @()
+        }
+    }
 }

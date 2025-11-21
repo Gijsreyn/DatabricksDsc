@@ -285,3 +285,157 @@ Describe 'DatabricksResourceBase\InvokeDatabricksApi()' -Tag 'InvokeDatabricksAp
         }
     }
 }
+
+Describe 'DatabricksResourceBase\GetAllResourcesFromApi()' -Tag 'GetAllResourcesFromApi' {
+    Context 'When calling base implementation' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Warning
+
+                $script:mockDatabricksResourceBaseInstance = [DatabricksResourceBase]::new()
+                $script:mockDatabricksResourceBaseInstance.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:mockDatabricksResourceBaseInstance.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksResourceBase]::GetAllResourcesFromApi($script:mockDatabricksResourceBaseInstance)
+
+                $result | Should -HaveCount 0
+            }
+        }
+
+        It 'Should write warning message about not being implemented' {
+            InModuleScope -ScriptBlock {
+                $null = [DatabricksResourceBase]::GetAllResourcesFromApi($script:mockDatabricksResourceBaseInstance)
+
+                Should -Invoke -CommandName Write-Warning -Times 1 -Exactly -Scope It
+            }
+        }
+    }
+}
+
+Describe 'DatabricksResourceBase\CreateExportInstance()' -Tag 'CreateExportInstance' {
+    Context 'When calling base implementation' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Warning
+
+                $script:mockDatabricksResourceBaseInstance = [DatabricksResourceBase]::new()
+                $script:mockDatabricksResourceBaseInstance.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:mockDatabricksResourceBaseInstance.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+
+                $script:mockApiData = [PSCustomObject]@{
+                    id   = 'test-123'
+                    name = 'Test Resource'
+                }
+            }
+        }
+
+        It 'Should return null' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksResourceBase]::CreateExportInstance($script:mockApiData, $script:mockDatabricksResourceBaseInstance)
+
+                $result | Should -BeNullOrEmpty
+            }
+        }
+
+        It 'Should write warning message about not being implemented' {
+            InModuleScope -ScriptBlock {
+                $null = [DatabricksResourceBase]::CreateExportInstance($script:mockApiData, $script:mockDatabricksResourceBaseInstance)
+
+                Should -Invoke -CommandName Write-Warning -Times 1 -Exactly -Scope It
+            }
+        }
+    }
+}
+
+Describe 'DatabricksResourceBase\Export()' -Tag 'Export' {
+    Context 'When calling parameterless Export() on base class' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+                Mock -CommandName Write-Warning
+            }
+        }
+
+        It 'Should return empty array when GetAllResourcesFromApi returns empty' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksResourceBase]::Export()
+
+                $result | Should -HaveCount 0
+            }
+        }
+
+        It 'Should call Write-Verbose for exporting and no resources found' {
+            InModuleScope -ScriptBlock {
+                $null = [DatabricksResourceBase]::Export()
+
+                Should -Invoke -CommandName Write-Verbose -Times 2 -Exactly -Scope It
+            }
+        }
+    }
+}
+
+Describe 'DatabricksResourceBase\Export([FilteringInstance])' -Tag 'ExportFiltering' {
+    Context 'When WorkspaceUrl is not set' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstanceNoUrl = [DatabricksResourceBase]::new()
+                $script:mockInstanceNoUrl.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+            }
+        }
+
+        It 'Should throw ArgumentException' {
+            InModuleScope -ScriptBlock {
+                { [DatabricksResourceBase]::Export($script:mockInstanceNoUrl) } | Should -Throw -ExpectedMessage '*WorkspaceUrl is required*'
+            }
+        }
+    }
+
+    Context 'When AccessToken is not set' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstanceNoToken = [DatabricksResourceBase]::new()
+                $script:mockInstanceNoToken.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+            }
+        }
+
+        It 'Should throw ArgumentException' {
+            InModuleScope -ScriptBlock {
+                { [DatabricksResourceBase]::Export($script:mockInstanceNoToken) } | Should -Throw -ExpectedMessage '*AccessToken is required*'
+            }
+        }
+    }
+
+    Context 'When calling Export with valid authentication' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+                Mock -CommandName Write-Warning
+
+                $script:mockInstanceValid = [DatabricksResourceBase]::new()
+                $script:mockInstanceValid.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:mockInstanceValid.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+            }
+        }
+
+        It 'Should return empty array when GetAllResourcesFromApi returns empty' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksResourceBase]::Export($script:mockInstanceValid)
+
+                $result | Should -HaveCount 0
+            }
+        }
+
+        It 'Should call Write-Verbose messages' {
+            InModuleScope -ScriptBlock {
+                $null = [DatabricksResourceBase]::Export($script:mockInstanceValid)
+
+                Should -Invoke -CommandName Write-Verbose -Times 2 -Exactly -Scope It
+            }
+        }
+    }
+
+}

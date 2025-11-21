@@ -471,7 +471,7 @@ class DatabricksUser : DatabricksResourceBase
     hidden [System.Collections.Hashtable] BuildUserPatchPayload([System.Collections.Hashtable] $properties)
     {
         $body = @{
-            schemas = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
+            schemas    = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
             Operations = @()
         }
 
@@ -490,8 +490,8 @@ class DatabricksUser : DatabricksResourceBase
             }
 
             $body.Operations += @{
-                op = 'add'
-                path = 'entitlements'
+                op    = 'add'
+                path  = 'entitlements'
                 value = $entitlementValues
             }
         }
@@ -519,6 +519,290 @@ class DatabricksUser : DatabricksResourceBase
             $errorMessage = $this.localizedData.InvalidUserName -f $properties.UserName
 
             New-ArgumentException -ArgumentName 'UserName' -Message $errorMessage
+        }
+    }
+
+    <#
+        Retrieves all users from the Databricks workspace API.
+
+        .PARAMETER Instance
+            An instance of DatabricksUser with WorkspaceUrl and AccessToken populated.
+
+        .RETURNS
+            Array of PSCustomObjects representing user data from the SCIM API.
+    #>
+    static [PSObject[]] GetAllResourcesFromApi([DatabricksResourceBase] $Instance)
+    {
+        try
+        {
+            # Call the SCIM API to get all users
+            $response = $Instance.InvokeDatabricksApi(
+                'GET',
+                '/api/2.0/preview/scim/v2/Users',
+                $null
+            )
+
+            # Return the Resources array from the response
+            if ($response.Resources)
+            {
+                return $response.Resources
+            }
+            else
+            {
+                return @()
+            }
+        }
+        catch
+        {
+            Write-Verbose -Message (
+                'Failed to retrieve users from Databricks workspace: {0}' -f $_.Exception.Message
+            )
+            throw
+        }
+    }
+
+    <#
+        Converts API user data to a DatabricksUser instance.
+
+        .PARAMETER ApiData
+            A PSCustomObject containing user data from the SCIM API.
+
+        .PARAMETER Instance
+            An instance of DatabricksUser with WorkspaceUrl and AccessToken populated.
+
+        .RETURNS
+            A DatabricksUser instance populated with data from the API.
+    #>
+    static [DatabricksResourceBase] CreateExportInstance([PSObject] $ApiData, [DatabricksResourceBase] $Instance)
+    {
+        $exportInstance = [DatabricksUser]::new()
+
+        # Copy authentication properties
+        $exportInstance.WorkspaceUrl = $Instance.WorkspaceUrl
+        $exportInstance.AccessToken = $Instance.AccessToken
+
+        # Populate key property
+        $exportInstance.UserName = $ApiData.userName
+
+        # Populate other properties
+        if ($ApiData.displayName)
+        {
+            $exportInstance.DisplayName = $ApiData.displayName
+        }
+
+        if ($null -ne $ApiData.active)
+        {
+            $exportInstance.Active = $ApiData.active
+        }
+
+        if ($ApiData.externalId)
+        {
+            $exportInstance.ExternalId = $ApiData.externalId
+        }
+
+        if ($ApiData.id)
+        {
+            $exportInstance.Id = $ApiData.id
+        }
+
+        # Convert emails
+        if ($ApiData.emails)
+        {
+            $exportInstance.Emails = @()
+            foreach ($email in $ApiData.emails)
+            {
+                $exportInstance.Emails += [UserEmail]@{
+                    Value   = $email.value
+                    Type    = $email.type
+                    Primary = $email.primary
+                }
+            }
+
+            # Sort emails for consistency
+            $exportInstance.Emails = $exportInstance.Emails | Sort-Object
+        }
+
+        # Convert name
+        if ($ApiData.name)
+        {
+            $exportInstance.Name = [UserName]@{
+                GivenName  = $ApiData.name.givenName
+                FamilyName = $ApiData.name.familyName
+            }
+        }
+
+        # Convert entitlements
+        if ($ApiData.entitlements)
+        {
+            $exportInstance.Entitlements = @()
+            foreach ($entitlement in $ApiData.entitlements)
+            {
+                $exportInstance.Entitlements += [UserEntitlement]@{
+                    Value = $entitlement.value
+                }
+            }
+
+            # Sort entitlements for consistency
+            $exportInstance.Entitlements = $exportInstance.Entitlements | Sort-Object
+        }
+
+        # Convert roles
+        if ($ApiData.roles)
+        {
+            $exportInstance.Roles = @()
+            foreach ($role in $ApiData.roles)
+            {
+                $exportInstance.Roles += [UserRole]@{
+                    Value = $role.value
+                }
+            }
+
+            # Sort roles for consistency
+            $exportInstance.Roles = $exportInstance.Roles | Sort-Object
+        }
+
+        # Set _exist to true since we're exporting existing resources
+        $exportInstance._exist = $true
+
+        return $exportInstance
+    }
+
+    <#
+        .SYNOPSIS
+            Exports all users from the Databricks workspace.
+
+        .DESCRIPTION
+            This parameterless overload requires using Export([FilteringInstance]) instead.
+            Create a DatabricksUser instance with WorkspaceUrl and AccessToken set, then
+            call Export with that instance to retrieve all users.
+
+        .EXAMPLE
+            $instance = [DatabricksUser]::new()
+            $instance.WorkspaceUrl = 'https://adb-123.azuredatabricks.net'
+            $instance.AccessToken = $token
+            [DatabricksUser]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksUser[]] Array of DatabricksUser instances representing all users in the workspace.
+    #>
+    static [DatabricksResourceBase[]] Export()
+    {
+        $errorMessage = 'Export() requires authentication. Create a DatabricksUser instance with WorkspaceUrl and AccessToken set, then call Export($instance) instead.'
+
+        throw [System.InvalidOperationException]::new($errorMessage)
+    }
+
+    <#
+        .SYNOPSIS
+            Exports users from the Databricks workspace filtered by the provided instance.
+
+        .PARAMETER FilteringInstance
+            A DatabricksUser instance with WorkspaceUrl and AccessToken set (required).
+            Optionally set filter properties (UserName, DisplayName, etc.) to filter results.
+            If no filter properties are set, all users are returned.
+
+        .DESCRIPTION
+            Retrieves all users from the workspace and filters them based on properties
+            set in the FilteringInstance parameter. This method overrides the base class
+            Export([FilteringInstance]) method.
+
+        .EXAMPLE
+            # Export all users
+            $instance = [DatabricksUser]::new()
+            $instance.WorkspaceUrl = 'https://adb-123.azuredatabricks.net'
+            $instance.AccessToken = $token
+            [DatabricksUser]::Export($instance)
+
+        .EXAMPLE
+            # Export filtered users
+            $instance = [DatabricksUser]::new()
+            $instance.WorkspaceUrl = 'https://adb-123.azuredatabricks.net'
+            $instance.AccessToken = $token
+            $instance.UserName = 'user@example.com'
+            [DatabricksUser]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksUser[]] Array of DatabricksUser instances matching the filter criteria.
+    #>
+    static [DatabricksResourceBase[]] Export([DatabricksResourceBase] $FilteringInstance)
+    {
+        $resourceType = $FilteringInstance.GetType().Name
+
+        try
+        {
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportingResources -f $resourceType
+            )
+
+            # Call the virtual method to get all resources
+            $apiResources = [DatabricksUser]::GetAllResourcesFromApi($FilteringInstance)
+
+            if ($null -eq $apiResources -or $apiResources.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.NoResourcesFound -f $resourceType
+                )
+                return @()
+            }
+
+            # Convert each API resource to a resource instance
+            [DatabricksResourceBase[]] $allResources = $apiResources.ForEach{
+                [DatabricksUser]::CreateExportInstance($_, $FilteringInstance)
+            }
+
+            # Get all properties from the filtering instance that have values
+            # Exclude common base properties and DSC framework properties
+            # Also exclude properties with default values (Active defaults to $true)
+            $filterProperties = $FilteringInstance.PSObject.Properties.Where{
+                $_.Name -notin @('WorkspaceUrl', 'AccessToken', 'Reasons', 'Id', 'localizedData', '_exist', '_inDesiredState', 'ExcludeDscProperties', 'Active') -and
+                -not [string]::IsNullOrEmpty($_.Value)
+            }
+
+            # If no filter properties, return all resources
+            if ($filterProperties.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.ExportedResourceCount -f $allResources.Count, $resourceType
+                )
+                return $allResources
+            }
+
+            # Apply filtering based on properties set in FilteringInstance
+            $result = $allResources.Where{
+                $currentResource = $_
+                $matches = $true
+
+                # Check if all specified filter properties match
+                foreach ($property in $filterProperties)
+                {
+                    if ($currentResource.PSObject.Properties.Name -contains $property.Name)
+                    {
+                        if ($currentResource.($property.Name) -ne $property.Value)
+                        {
+                            $matches = $false
+                            break
+                        }
+                    }
+                }
+
+                $matches
+            }
+
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportedResourceCount -f $result.Count, $resourceType
+            )
+
+            return $result
+        }
+        catch
+        {
+            $errorMessage = $FilteringInstance.localizedData.ExportFailed -f @(
+                $resourceType,
+                $_.Exception.Message
+            )
+
+            Write-Verbose -Message $errorMessage
+            return @()
         }
     }
 }

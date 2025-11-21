@@ -1124,3 +1124,576 @@ Describe 'DatabricksUser\AssertProperties()' -Tag 'AssertProperties' {
         }
     }
 }
+
+Describe 'DatabricksUser\GetAllResourcesFromApi()' -Tag 'GetAllResourcesFromApi' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockDatabricksUserInstance = [DatabricksUser] @{
+                WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                UserName     = 'testuser@example.com'
+            }
+        }
+    }
+
+    Context 'When API returns users successfully' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockApiResponse = @{
+                    Resources = @(
+                        [PSCustomObject]@{
+                            id          = '1234567890'
+                            userName    = 'user1@example.com'
+                            displayName = 'User One'
+                            active      = $true
+                        }
+                        [PSCustomObject]@{
+                            id          = '0987654321'
+                            userName    = 'user2@example.com'
+                            displayName = 'User Two'
+                            active      = $false
+                        }
+                    )
+                }
+
+                $script:mockDatabricksUserInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param($Method, $Uri, $Body)
+                        return $script:mockApiResponse
+                    }
+            }
+        }
+
+        It 'Should return the Resources array from the API response' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::GetAllResourcesFromApi($script:mockDatabricksUserInstance)
+
+                $result | Should -HaveCount 2
+                $result[0].userName | Should -Be 'user1@example.com'
+                $result[1].userName | Should -Be 'user2@example.com'
+            }
+        }
+    }
+
+    Context 'When API returns empty Resources array' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:emptyInstance = [DatabricksUser] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    UserName     = 'testuser@example.com'
+                }
+
+                $script:emptyInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = @() }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::GetAllResourcesFromApi($script:emptyInstance)
+
+                $result | Should -HaveCount 0
+            }
+        }
+    }
+
+    Context 'When API returns no Resources property' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:noResourcesInstance = [DatabricksUser] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    UserName     = 'testuser@example.com'
+                }
+
+                $script:noResourcesInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::GetAllResourcesFromApi($script:noResourcesInstance)
+
+                $result | Should -HaveCount 0
+            }
+        }
+    }
+
+    Context 'When API call fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:failInstance = [DatabricksUser] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    UserName     = 'testuser@example.com'
+                }
+
+                $script:failInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error: Unauthorized'
+                    }
+            }
+        }
+
+        It 'Should throw an exception' {
+            InModuleScope -ScriptBlock {
+                { [DatabricksUser]::GetAllResourcesFromApi($script:failInstance) } | Should -Throw
+            }
+        }
+    }
+}
+
+Describe 'DatabricksUser\CreateExportInstance()' -Tag 'CreateExportInstance' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockDatabricksUserInstance = [DatabricksUser] @{
+                WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                UserName     = 'testuser@example.com'
+            }
+        }
+    }
+
+    Context 'When creating export instance with all properties' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockApiUser = [PSCustomObject]@{
+                    id          = '1234567890'
+                    userName    = 'testuser@example.com'
+                    displayName = 'Test User'
+                    active      = $true
+                    externalId  = 'ext-123'
+                    emails      = @(
+                        [PSCustomObject]@{
+                            value   = 'testuser@example.com'
+                            type    = 'work'
+                            primary = $true
+                        }
+                    )
+                    name        = [PSCustomObject]@{
+                        givenName  = 'Test'
+                        familyName = 'User'
+                    }
+                    entitlements = @(
+                        [PSCustomObject]@{ value = 'allow-cluster-create' }
+                        [PSCustomObject]@{ value = 'databricks-sql-access' }
+                    )
+                    roles       = @(
+                        [PSCustomObject]@{ value = 'workspace-admin' }
+                    )
+                }
+            }
+        }
+
+        It 'Should create instance with correct type' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.GetType().Name | Should -Be 'DatabricksUser'
+            }
+        }
+
+        It 'Should copy authentication properties from template' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.WorkspaceUrl | Should -Be 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $result.AccessToken | Should -Not -BeNullOrEmpty
+            }
+        }
+
+        It 'Should populate key property UserName' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.UserName | Should -Be 'testuser@example.com'
+            }
+        }
+
+        It 'Should populate DisplayName property' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.DisplayName | Should -Be 'Test User'
+            }
+        }
+
+        It 'Should populate Active property' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Active | Should -BeTrue
+            }
+        }
+
+        It 'Should populate ExternalId property' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.ExternalId | Should -Be 'ext-123'
+            }
+        }
+
+        It 'Should populate Id property' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Id | Should -Be '1234567890'
+            }
+        }
+
+        It 'Should convert and sort emails' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Emails | Should -HaveCount 1
+                $result.Emails[0].Value | Should -Be 'testuser@example.com'
+                $result.Emails[0].Type | Should -Be 'work'
+                $result.Emails[0].Primary | Should -BeTrue
+            }
+        }
+
+        It 'Should convert name object' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Name.GivenName | Should -Be 'Test'
+                $result.Name.FamilyName | Should -Be 'User'
+            }
+        }
+
+        It 'Should convert and sort entitlements' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Entitlements | Should -HaveCount 2
+                # Should be sorted
+                $result.Entitlements[0].Value | Should -Be 'allow-cluster-create'
+                $result.Entitlements[1].Value | Should -Be 'databricks-sql-access'
+            }
+        }
+
+        It 'Should convert and sort roles' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result.Roles | Should -HaveCount 1
+                $result.Roles[0].Value | Should -Be 'workspace-admin'
+            }
+        }
+
+        It 'Should set _exist to true' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockApiUser, $script:mockDatabricksUserInstance)
+
+                $result._exist | Should -BeTrue
+            }
+        }
+    }
+
+    Context 'When creating export instance with minimal properties' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockMinimalApiUser = [PSCustomObject]@{
+                    userName = 'minimal@example.com'
+                    active   = $false
+                }
+            }
+        }
+
+        It 'Should create instance with only required properties' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::CreateExportInstance($script:mockMinimalApiUser, $script:mockDatabricksUserInstance)
+
+                $result.UserName | Should -Be 'minimal@example.com'
+                $result.DisplayName | Should -BeNullOrEmpty
+                $result.Active | Should -BeFalse
+                $result.ExternalId | Should -BeNullOrEmpty
+            }
+        }
+    }
+}
+
+Describe 'DatabricksUser\Export()' -Tag 'Export' {
+    Context 'When calling parameterless Export()' {
+        It 'Should throw an exception with guidance' {
+            InModuleScope -ScriptBlock {
+                $expectedMessage = 'Export() requires authentication. Create a DatabricksUser instance with WorkspaceUrl and AccessToken set, then call Export($instance) instead.'
+
+                { [DatabricksUser]::Export() } | Should -Throw -ExpectedMessage "*$expectedMessage*"
+            }
+        }
+    }
+}
+
+Describe 'DatabricksUser\Export([FilteringInstance])' -Tag 'ExportFiltering' {
+    BeforeAll {
+        InModuleScope -ScriptBlock {
+            $script:mockApiUsers = @(
+                [PSCustomObject]@{
+                    id          = '1234567890'
+                    userName    = 'user1@example.com'
+                    displayName = 'User One'
+                    active      = $true
+                }
+                [PSCustomObject]@{
+                    id          = '0987654321'
+                    userName    = 'user2@example.com'
+                    displayName = 'User Two'
+                    active      = $false
+                }
+                [PSCustomObject]@{
+                    id          = '1111111111'
+                    userName    = 'user3@example.com'
+                    displayName = 'User Three'
+                    active      = $true
+                }
+            )
+        }
+    }
+
+    Context 'When exporting all users without filters' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:emptyFilterInstance = [DatabricksUser]::new()
+                $script:emptyFilterInstance.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:emptyFilterInstance.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+
+                $script:emptyFilterInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return all users' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:emptyFilterInstance)
+
+                $result | Should -HaveCount 3
+            }
+        }
+
+        It 'Should return instances of correct type' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:emptyFilterInstance)
+
+                $result[0].GetType().Name | Should -Be 'DatabricksUser'
+                $result[1].GetType().Name | Should -Be 'DatabricksUser'
+                $result[2].GetType().Name | Should -Be 'DatabricksUser'
+            }
+        }
+
+        It 'Should populate all user properties correctly' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:emptyFilterInstance)
+
+                $result[0].UserName | Should -Be 'user1@example.com'
+                $result[0].DisplayName | Should -Be 'User One'
+                $result[0].Active | Should -BeTrue
+
+                $result[1].UserName | Should -Be 'user2@example.com'
+                $result[1].DisplayName | Should -Be 'User Two'
+                $result[1].Active | Should -BeFalse
+            }
+        }
+    }
+
+    Context 'When exporting with UserName filter' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:filterInstanceByUserName = [DatabricksUser] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    UserName     = 'user2@example.com'
+                }
+
+                $script:filterInstanceByUserName |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return only matching user' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:filterInstanceByUserName)
+
+                $result | Should -HaveCount 1
+                $result[0].UserName | Should -Be 'user2@example.com'
+            }
+        }
+    }
+
+    Context 'When exporting with DisplayName filter' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:filterInstanceByDisplayName = [DatabricksUser]::new()
+                $script:filterInstanceByDisplayName.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:filterInstanceByDisplayName.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                $script:filterInstanceByDisplayName.DisplayName = 'User One'
+
+                $script:filterInstanceByDisplayName |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return only matching user' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:filterInstanceByDisplayName)
+
+                $result | Should -HaveCount 1
+                $result[0].DisplayName | Should -Be 'User One'
+                $result[0].UserName | Should -Be 'user1@example.com'
+            }
+        }
+    }
+
+    Context 'When exporting with Active filter' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:filterInstanceByActive = [DatabricksUser]::new()
+                $script:filterInstanceByActive.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:filterInstanceByActive.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                # Note: Active is excluded from filtering because it has a default value ($true)
+                # To filter by Active, use other resource-specific properties
+
+                $script:filterInstanceByActive |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return all users (Active is excluded from filtering due to default value)' {
+            InModuleScope -ScriptBlock {
+                # Active is excluded from filtering, so all users are returned
+                $result = [DatabricksUser]::Export($script:filterInstanceByActive)
+
+                $result | Should -HaveCount 3
+            }
+        }
+    }
+
+    Context 'When no users match filter' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:filterInstanceNoMatch = [DatabricksUser] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    UserName     = 'nonexistent@example.com'
+                }
+
+                $script:filterInstanceNoMatch |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:filterInstanceNoMatch)
+
+                $result | Should -HaveCount 0
+            }
+        }
+    }
+
+    Context 'When API returns no resources' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:emptyInstance = [DatabricksUser]::new()
+                $script:emptyInstance.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:emptyInstance.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+
+                $script:emptyInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = @() }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:emptyInstance)
+
+                $result | Should -HaveCount 0
+            }
+        }
+    }
+
+    Context 'When API call fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:failInstance = [DatabricksUser]::new()
+                $script:failInstance.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:failInstance.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+
+                $script:failInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error: Unauthorized'
+                    }
+            }
+        }
+
+        It 'Should return empty array and log error' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:failInstance)
+
+                $result | Should -HaveCount 0
+            }
+        }
+    }
+
+    Context 'When exporting with multiple filters' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                Mock -CommandName Write-Verbose
+
+                $script:filterInstanceMultiple = [DatabricksUser]::new()
+                $script:filterInstanceMultiple.WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                $script:filterInstanceMultiple.AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                $script:filterInstanceMultiple.UserName = 'user1@example.com'
+                $script:filterInstanceMultiple.Active = $true
+
+                $script:filterInstanceMultiple |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{ Resources = $script:mockApiUsers }
+                    }
+            }
+        }
+
+        It 'Should return only users matching all filters' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksUser]::Export($script:filterInstanceMultiple)
+
+                $result | Should -HaveCount 1
+                $result[0].UserName | Should -Be 'user1@example.com'
+                $result[0].Active | Should -BeTrue
+            }
+        }
+    }
+}
