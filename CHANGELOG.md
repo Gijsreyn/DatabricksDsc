@@ -17,8 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - POST: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/metastores`
     - DELETE: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/metastores/{metastore_id}`
   - Validates AccountId and MetastoreId as GUIDs, WorkspaceId as numeric
-  - Includes comprehensive unit tests with 25 test cases covering all methods
+  - Includes comprehensive unit tests with 32 test cases covering all methods
     and scenarios
+  - Implements Export functionality:
+    - `GetAllResourcesFromApi()` retrieves all workspace assignments for a
+      metastore using GET `/api/2.0/accounts/{account_id}/metastores/{metastore_id}/workspaces`
+    - `CreateExportInstance()` converts API workspace assignment data to
+      resource instances
+    - `Export([FilteringInstance])` supports filtering by WorkspaceId
+    - Requires AccountId and MetastoreId to be set in the filtering instance
+    - Added localization strings for export operations (DAMA0016-DAMA0019)
+    - Added 7 unit tests for Export functionality covering all scenarios
 - Added `DatabricksAccountResourceBase` intermediate base class for account-level
   DSC resources
   - Inherits from `DatabricksResourceBase` and provides specialized functionality

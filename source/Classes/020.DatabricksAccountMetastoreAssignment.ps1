@@ -327,4 +327,234 @@ class DatabricksAccountMetastoreAssignment : DatabricksAccountResourceBase
             New-ArgumentException -ArgumentName 'MetastoreId' -Message $errorMessage
         }
     }
+
+    <#
+        Retrieves all workspace assignments for a metastore from the Databricks account API.
+
+        .PARAMETER Instance
+            An instance of DatabricksAccountMetastoreAssignment with AccountsUrl, AccessToken,
+            AccountId, and MetastoreId populated.
+
+        .RETURNS
+            Array of PSCustomObjects representing workspace assignment data from the API.
+    #>
+    static [PSObject[]] GetAllResourcesFromApi([DatabricksResourceBase] $Instance)
+    {
+        $typedInstance = [DatabricksAccountMetastoreAssignment] $Instance
+
+        try
+        {
+            # Call the account API to get all workspace assignments for the metastore
+            $response = $Instance.InvokeDatabricksApi(
+                'GET',
+                "/api/2.0/accounts/$($typedInstance.AccountId)/metastores/$($typedInstance.MetastoreId)/workspaces",
+                $null
+            )
+
+            # Return the workspace_ids array from the response
+            if ($response -and $response.workspace_ids)
+            {
+                # Convert workspace IDs to objects for processing
+                return $response.workspace_ids.ForEach{ @{ workspace_id = $_ } }
+            }
+            else
+            {
+                return @()
+            }
+        }
+        catch
+        {
+            Write-Verbose -Message (
+                'Failed to retrieve metastore workspace assignments from Databricks account: {0}' -f $_.Exception.Message
+            )
+            throw
+        }
+    }
+
+    <#
+        Converts API workspace assignment data to a DatabricksAccountMetastoreAssignment instance.
+
+        .PARAMETER ApiData
+            A PSCustomObject containing workspace assignment data from the API.
+
+        .PARAMETER Instance
+            An instance of DatabricksAccountMetastoreAssignment with AccountsUrl, AccessToken,
+            AccountId, and MetastoreId populated.
+
+        .RETURNS
+            A DatabricksAccountMetastoreAssignment instance populated with data from the API.
+    #>
+    static [DatabricksResourceBase] CreateExportInstance([PSObject] $ApiData, [DatabricksResourceBase] $Instance)
+    {
+        $typedInstance = [DatabricksAccountMetastoreAssignment] $Instance
+        $exportInstance = [DatabricksAccountMetastoreAssignment]::new()
+
+        # Copy authentication properties
+        $exportInstance.WorkspaceUrl = $Instance.WorkspaceUrl
+        $exportInstance.AccessToken = $Instance.AccessToken
+
+        # Populate key properties
+        $exportInstance.AccountId = $typedInstance.AccountId
+        $exportInstance.MetastoreId = $typedInstance.MetastoreId
+
+        # ApiData.workspace_id is already an integer from the API
+        if ($ApiData.workspace_id -is [System.Int64] -or $ApiData.workspace_id -is [System.Int32])
+        {
+            $exportInstance.WorkspaceId = $ApiData.workspace_id.ToString()
+        }
+        else
+        {
+            $exportInstance.WorkspaceId = $ApiData.workspace_id
+        }
+
+        # Set _exist to true since we're exporting existing assignments
+        $exportInstance._exist = $true
+
+        return $exportInstance
+    }
+
+    <#
+        .SYNOPSIS
+            Exports all workspace assignments for a metastore from the Databricks account.
+
+        .DESCRIPTION
+            This parameterless overload requires using Export([FilteringInstance]) instead.
+            Create a DatabricksAccountMetastoreAssignment instance with AccountsUrl, AccessToken,
+            AccountId, and MetastoreId set, then call Export with that instance to retrieve
+            all workspace assignments.
+
+        .EXAMPLE
+            $instance = [DatabricksAccountMetastoreAssignment]::new()
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.MetastoreId = '87654321-4321-4321-4321-210987654321'
+            [DatabricksAccountMetastoreAssignment]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksAccountMetastoreAssignment[]] Array of DatabricksAccountMetastoreAssignment
+            instances representing all workspace assignments for the metastore.
+    #>
+    static [DatabricksResourceBase[]] Export()
+    {
+        $errorMessage = 'Export() requires authentication and key properties. Create a DatabricksAccountMetastoreAssignment instance with AccessToken, AccountId, and MetastoreId set, then call Export($instance) instead.'
+
+        throw [System.InvalidOperationException]::new($errorMessage)
+    }
+
+    <#
+        .SYNOPSIS
+            Exports workspace assignments for a metastore filtered by the provided instance.
+
+        .PARAMETER FilteringInstance
+            A DatabricksAccountMetastoreAssignment instance with AccessToken, AccountId,
+            and MetastoreId set (required). Optionally set WorkspaceId to filter results.
+            If WorkspaceId is not set, all workspace assignments for the metastore are returned.
+
+        .DESCRIPTION
+            Retrieves all workspace assignments for the specified metastore and filters them
+            based on properties set in the FilteringInstance parameter. This method overrides
+            the base class Export([FilteringInstance]) method.
+
+        .EXAMPLE
+            # Export all workspace assignments for a metastore
+            $instance = [DatabricksAccountMetastoreAssignment]::new()
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.MetastoreId = '87654321-4321-4321-4321-210987654321'
+            [DatabricksAccountMetastoreAssignment]::Export($instance)
+
+        .EXAMPLE
+            # Export specific workspace assignment
+            $instance = [DatabricksAccountMetastoreAssignment]::new()
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.MetastoreId = '87654321-4321-4321-4321-210987654321'
+            $instance.WorkspaceId = '1234567890123456'
+            [DatabricksAccountMetastoreAssignment]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksAccountMetastoreAssignment[]] Array of DatabricksAccountMetastoreAssignment
+            instances matching the filter criteria.
+    #>
+    static [DatabricksResourceBase[]] Export([DatabricksResourceBase] $FilteringInstance)
+    {
+        $resourceType = $FilteringInstance.GetType().Name
+
+        try
+        {
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportingResources -f $resourceType
+            )
+
+            # Call the virtual method to get all resources
+            $apiResources = [DatabricksAccountMetastoreAssignment]::GetAllResourcesFromApi($FilteringInstance)
+
+            if ($null -eq $apiResources -or $apiResources.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.NoResourcesFound -f $resourceType
+                )
+                return @()
+            }
+
+            # Convert each API resource to a resource instance
+            [DatabricksResourceBase[]] $allResources = $apiResources.ForEach{
+                [DatabricksAccountMetastoreAssignment]::CreateExportInstance($_, $FilteringInstance)
+            }
+
+            # Get all properties from the filtering instance that have values
+            # Exclude common base properties and DSC framework properties
+            $typedInstance = [DatabricksAccountMetastoreAssignment] $FilteringInstance
+            $filterProperties = $FilteringInstance.PSObject.Properties.Where{
+                $_.Name -notin @('WorkspaceUrl', 'AccountsUrl', 'AccessToken', 'Reasons', 'localizedData', '_exist', 'ExcludeDscProperties', 'AccountId', 'MetastoreId') -and
+                -not [string]::IsNullOrEmpty($_.Value)
+            }
+
+            # If no filter properties, return all resources
+            if ($filterProperties.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.ExportedResourceCount -f $allResources.Count, $resourceType
+                )
+                return $allResources
+            }
+
+            # Apply filtering based on properties set in FilteringInstance
+            $result = $allResources.Where{
+                $currentResource = $_
+                $matches = $true
+
+                # Check if all specified filter properties match
+                foreach ($property in $filterProperties)
+                {
+                    if ($currentResource.PSObject.Properties.Name -contains $property.Name)
+                    {
+                        if ($currentResource.($property.Name) -ne $property.Value)
+                        {
+                            $matches = $false
+                            break
+                        }
+                    }
+                }
+
+                $matches
+            }
+
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportedResourceCount -f $result.Count, $resourceType
+            )
+
+            return $result
+        }
+        catch
+        {
+            $errorMessage = $FilteringInstance.localizedData.ExportFailed -f @(
+                $resourceType,
+                $_.Exception.Message
+            )
+
+            Write-Verbose -Message $errorMessage
+            return @()
+        }
+    }
 }

@@ -14,4 +14,8 @@ ConvertFrom-StringData @'
     InvalidAccountId = The AccountId '{0}' is not valid. It must be a valid GUID. (DAMA0013)
     InvalidWorkspaceId = The WorkspaceId '{0}' is not valid. It must be numeric. (DAMA0014)
     InvalidMetastoreId = The MetastoreId '{0}' is not valid. It must be a valid GUID. (DAMA0015)
+    ExportingResources = Exporting {0} resources from Databricks account. (DAMA0016)
+    NoResourcesFound = No {0} resources found in Databricks account. (DAMA0017)
+    ExportedResourceCount = Exported {0} {1} resource(s). (DAMA0018)
+    ExportFailed = Failed to export {0} resources: {1}. (DAMA0019)
 '@

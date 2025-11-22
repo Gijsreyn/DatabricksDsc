@@ -403,12 +403,14 @@ Describe 'DatabricksAccountMetastoreAssignment\GetCurrentState()' -Tag 'GetCurre
 
                 $script:mockInstance |
                     Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
-                        return @{}
+                        return @{
+                            workspace_ids = @()
+                        }
                     }
             }
         }
 
-        It 'Should return _exist = $false' {
+        It 'Should return empty array' {
             InModuleScope -ScriptBlock {
                 $currentState = $script:mockInstance.GetCurrentState(
                     @{
@@ -704,6 +706,180 @@ Describe 'DatabricksAccountMetastoreAssignment\AssertProperties()' -Tag 'AssertP
                             MetastoreId  = 'not-a-guid'
                         })
                 } | Should -Throw -ExpectedMessage '*MetastoreId*'
+            }
+        }
+    }
+}
+
+Describe 'DatabricksAccountMetastoreAssignment\Export()' -Tag 'Export' {
+    Context 'When calling parameterless Export()' {
+        It 'Should throw an error requiring authentication' {
+            InModuleScope -ScriptBlock {
+                {
+                    [DatabricksAccountMetastoreAssignment]::Export()
+                } | Should -Throw -ExpectedMessage '*authentication*'
+            }
+        }
+    }
+}
+
+Describe 'DatabricksAccountMetastoreAssignment\Export([FilteringInstance])' -Tag 'Export' {
+    Context 'When exporting all workspace assignments for a metastore' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountMetastoreAssignment] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    MetastoreId  = '87654321-4321-4321-4321-210987654321'
+                }
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{
+                            workspace_ids = @(1234567890123456, 9876543210987654)
+                        }
+                    }
+            }
+        }
+
+        It 'Should return all workspace assignments' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 2
+                $result[0].WorkspaceId | Should -Be '1234567890123456'
+                $result[0].AccountId | Should -Be '12345678-1234-1234-1234-123456789012'
+                $result[0].MetastoreId | Should -Be '87654321-4321-4321-4321-210987654321'
+                $result[0]._exist | Should -BeTrue
+                $result[1].WorkspaceId | Should -Be '9876543210987654'
+            }
+        }
+
+        It 'Should call the API with correct endpoint' {
+            InModuleScope -ScriptBlock {
+                $script:apiCallCount = 0
+                $script:apiMethod = $null
+                $script:apiUri = $null
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param($Method, $Uri, $Body)
+                        $script:apiCallCount++
+                        $script:apiMethod = $Method
+                        $script:apiUri = $Uri
+                        return @{
+                            workspace_ids = @(1234567890123456, 9876543210987654)
+                        }
+                    }
+
+                [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                $script:apiCallCount | Should -Be 1
+                $script:apiMethod | Should -Be 'GET'
+                $script:apiUri | Should -Be '/api/2.0/accounts/12345678-1234-1234-1234-123456789012/metastores/87654321-4321-4321-4321-210987654321/workspaces'
+            }
+        }
+    }
+
+    Context 'When filtering by WorkspaceId' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountMetastoreAssignment] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    MetastoreId  = '87654321-4321-4321-4321-210987654321'
+                    WorkspaceId  = '1234567890123456'
+                }
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{
+                            workspace_ids = @(1234567890123456, 9876543210987654)
+                        }
+                    }
+            }
+        }
+
+        It 'Should return only matching workspace assignment' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 1
+                $result[0].WorkspaceId | Should -Be '1234567890123456'
+            }
+        }
+    }
+
+    Context 'When no workspace assignments exist' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountMetastoreAssignment] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    MetastoreId  = '87654321-4321-4321-4321-210987654321'
+                }
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        return @{
+                            workspace_ids = @()
+                        }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 0
+            }
+        }
+    }
+
+    Context 'When API call fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountMetastoreAssignment] @{
+                    WorkspaceUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId    = '12345678-1234-1234-1234-123456789012'
+                    MetastoreId  = '87654321-4321-4321-4321-210987654321'
+                }
+
+                Mock -CommandName Write-Verbose
+
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        throw 'API Error'
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 0
+            }
+        }
+
+        It 'Should write verbose error message' {
+            InModuleScope -ScriptBlock {
+                [DatabricksAccountMetastoreAssignment]::Export($script:mockInstance)
+
+                Should -Invoke -CommandName Write-Verbose -ParameterFilter {
+                    $Message -match 'Failed to export.*API Error'
+                }
             }
         }
     }
