@@ -10,7 +10,21 @@ resources:
         WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
         AccessToken: '<YourAccessTokenHere>'
         Name: 'Production Cluster Policy'
-        Definition: '{"spark_version":{"type":"fixed","value":"13.3.x-scala2.12"},"node_type_id":{"type":"allowlist","values":["Standard_DS3_v2","Standard_DS4_v2"]},"autoscale.min_workers":{"type":"fixed","value":2},"autoscale.max_workers":{"type":"range","maxValue":10}}'
+        Definition:
+          spark_version:
+            type: fixed
+            value: 13.3.x-scala2.12
+          node_type_id:
+            type: allowlist
+            values:
+            - Standard_DS3_v2
+            - Standard_DS4_v2
+          autoscale.min_workers:
+            type: fixed
+            value: 2
+          autoscale.max_workers:
+            type: range
+            maxValue: 10
         MaxClustersPerUser: 5
         Libraries:
         - Jar: 'dbfs:/mnt/libraries/my-library.jar'

@@ -10,4 +10,7 @@ resources:
         WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
         AccessToken: '<YourAccessTokenHere>'
         Name: 'Basic Cluster Policy'
-        Definition: '{"spark_version":{"type":"fixed","value":"13.3.x-scala2.12"}}'
+        Definition:
+          spark_version:
+            type: fixed
+            value: 13.3.x-scala2.12

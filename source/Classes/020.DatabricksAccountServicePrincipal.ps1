@@ -46,11 +46,12 @@
     .PARAMETER Id
         The internal Databricks service principal ID. This is read-only.
 
-    .PARAMETER WorkspaceUrl
-        The URL of the Databricks workspace. Required for API calls.
+    .PARAMETER AccountsUrl
+        The URL of the Databricks Account Console. Defaults to
+        'https://accounts.azuredatabricks.net' and typically does not need to be specified.
 
     .PARAMETER AccessToken
-        The Account API Token used to authenticate to the Databricks account.
+        The Account API token used to authenticate to the Databricks account.
         Must be provided as a SecureString.
 
     .PARAMETER _exist
@@ -63,7 +64,6 @@
             ApplicationId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
             DisplayName   = 'ETL Service Principal'
             Active        = $true
-            WorkspaceUrl  = 'https://accounts.azuredatabricks.net'
             AccessToken   = $accessToken
         }
 
@@ -71,7 +71,7 @@
 #>
 
 [DscResource()]
-class DatabricksAccountServicePrincipal : DatabricksResourceBase
+class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
 {
     [DscProperty(Key)]
     [System.String]
@@ -101,9 +101,14 @@ class DatabricksAccountServicePrincipal : DatabricksResourceBase
     [System.String]
     $Id
 
+    [DscProperty()]
+    [System.Boolean]
+    $_exist = $true
+
     DatabricksAccountServicePrincipal() : base ()
     {
         $this.ExcludeDscProperties = @(
+            'AccountsUrl'
             'WorkspaceUrl'
             'AccountId'
             'ApplicationId'

@@ -87,6 +87,13 @@ Describe 'DatabricksAccountServicePrincipal' {
                 $instance.Active | Should -Be $true
             }
         }
+
+        It 'Should have _exist default to true' {
+            InModuleScope -ScriptBlock {
+                $instance = [DatabricksAccountServicePrincipal]::new()
+                $instance._exist | Should -Be $true
+            }
+        }
     }
 }
 
@@ -413,7 +420,7 @@ Describe 'DatabricksAccountServicePrincipal\GetCurrentState()' {
                 $currentState.AccountId | Should -Be '12345678-1234-1234-1234-123456789012'
                 $currentState.ApplicationId | Should -Be 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
                 $currentState._exist | Should -BeFalse
-                $script:mockInstance._exist | Should -BeFalse
+                $script:mockInstance._exist | Should -BeTrue
             }
         }
     }

@@ -53,11 +53,12 @@
     .PARAMETER Id
         The internal Databricks user ID. This is read-only.
 
-    .PARAMETER WorkspaceUrl
-        The URL of the Databricks workspace. Required for API calls.
+    .PARAMETER AccountsUrl
+        The URL of the Databricks Account Console. Defaults to
+        'https://accounts.azuredatabricks.net' and typically does not need to be specified.
 
     .PARAMETER AccessToken
-        The Personal Access Token used to authenticate to the Databricks workspace.
+        The Account API token used to authenticate to the Databricks account.
         Must be provided as a SecureString.
 
     .PARAMETER _exist
@@ -70,7 +71,6 @@
             UserName    = 'user@example.com'
             DisplayName = 'Example User'
             Active      = $true
-            WorkspaceUrl = 'https://accounts.azuredatabricks.net'
             AccessToken = $accessToken
         }
 
@@ -78,7 +78,7 @@
 #>
 
 [DscResource()]
-class DatabricksAccountUser : DatabricksResourceBase
+class DatabricksAccountUser : DatabricksAccountResourceBase
 {
     [DscProperty(Key)]
     [System.String]
@@ -116,9 +116,14 @@ class DatabricksAccountUser : DatabricksResourceBase
     [System.String]
     $Id
 
+    [DscProperty()]
+    [System.Boolean]
+    $_exist = $true
+
     DatabricksAccountUser() : base ()
     {
         $this.ExcludeDscProperties = @(
+            'AccountsUrl'
             'WorkspaceUrl'
             'AccountId'
             'UserName'
