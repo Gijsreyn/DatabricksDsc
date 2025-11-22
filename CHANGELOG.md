@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `DatabricksGroup` resource for managing groups in a Databricks workspace
+  - Manages groups using the workspace-level SCIM API v2
+  - Key property: `DisplayName` (unique identifier)
+  - Properties: `ExternalId`, `Members`, `Entitlements`, `Roles`, and read-only
+    `Groups` (parent groups)
+  - Supports create, update, and delete operations
+  - Uses workspace-level SCIM API endpoints:
+    - POST: `/api/2.0/preview/scim/v2/Groups` for create
+    - GET: `/api/2.0/preview/scim/v2/Groups` for list/read
+    - PATCH: `/api/2.0/preview/scim/v2/Groups/{id}` for update (SCIM PatchOp format)
+    - DELETE: `/api/2.0/preview/scim/v2/Groups/{id}` for remove
+  - Implements complex types: `GroupMember`, `GroupEntitlement`, `GroupRole`,
+    and `ParentGroup` following SCIM schema
+  - Members can be users or other groups (nested groups)
+  - Entitlements support values: `allow-cluster-create`, `allow-instance-pool-create`,
+    `workspace-access`, `databricks-sql-access`
+  - Roles support AWS instance profile ARNs
+  - Groups property shows parent groups (read-only, cannot be set directly)
+  - All array properties are sorted for consistent comparison
+  - Validates WorkspaceUrl format (must start with https://)
+  - Validates DisplayName is not empty
+  - Includes comprehensive unit tests (40+ tests) covering all methods and scenarios
+  - Implements Export functionality:
+    - `GetAllResourcesFromApi()` retrieves all groups from workspace
+    - `CreateExportInstance()` converts API group data to resource instances
+    - `Export([FilteringInstance])` supports filtering by any property
+    - Export() without parameters throws error requiring authentication
+  - Added localization strings for all operations (DG0001-DG0018)
+- Added `DatabricksAccountWorkspacePermissionAssignment` resource for managing
+  workspace permission assignments at the account level
+  - Manages permission assignments for principals (users, service principals,
+    or groups) at the workspace level
+  - Key properties: `AccountId`, `WorkspaceId`, `PrincipalId`, and `Permissions`
+  - Supports assignment (create/update via PUT) and unassignment (DELETE)
+  - Uses account-level API endpoints:
+    - GET: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/permissionassignments`
+    - PUT: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/permissionassignments/principals/{principal_id}`
+    - DELETE: `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/permissionassignments/principals/{principal_id}`
+  - Validates AccountId as GUID, WorkspaceId and PrincipalId as numeric
+  - Supports WorkspacePermissionLevel enum with User and Admin values
+  - Handles API response structure with `principal.principal_id` for identification
+    and `permissions` as string array
+  - Includes comprehensive unit tests covering all methods and scenarios
+  - Added localization strings for all operations (DAWPA0001-DAWPA0015)
+- Added `WorkspacePermissionLevel` enum for workspace permission levels
+  - Supported values: User and Admin
+  - Used by `DatabricksAccountWorkspacePermissionAssignment` resource
 - Added `DatabricksAccountMetastoreAssignment` resource for managing Unity
   Catalog metastore assignments to workspaces
   - Manages workspace-to-metastore assignments at the account level
