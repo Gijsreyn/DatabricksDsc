@@ -95,16 +95,16 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('DSC', 'DSCResourceKit', 'DSCResource', 'Databricks', 'DesiredStateConfiguration', 'Microsoft Desired State Configuration')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/Gijsreyn/DatabricksDsc/blob/main/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/Gijsreyn/DatabricksDsc'
 
         # A URL to an icon representing this module.
-        # IconUri = ''
+        IconUri = 'https://raw.githubusercontent.com/Gijsreyn/PSDSC/main/.images/databricksdsc-icon.png'
 
         # ReleaseNotes of this module
         ReleaseNotes = ''
