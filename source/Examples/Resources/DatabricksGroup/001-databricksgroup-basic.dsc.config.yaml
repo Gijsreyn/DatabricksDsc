@@ -1,0 +1,12 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Create workspace group with minimal configuration
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Basic workspace group
+      type: DatabricksDsc/DatabricksGroup
+      properties:
+        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        AccessToken: '<YourAccessTokenHere>'
+        DisplayName: 'data-engineers'

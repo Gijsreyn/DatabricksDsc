@@ -1,0 +1,17 @@
+ConvertFrom-StringData @'
+    EvaluatingPermissionAssignment = Evaluating permission assignment for principal '{0}' in workspace '{1}' of account '{2}'. (DAWPA0001)
+    PermissionAssignmentFound = Principal '{0}' has permissions '{1}' in workspace '{2}'. (DAWPA0002)
+    NoPermissionAssigned = No permissions are currently assigned to principal '{0}' in workspace '{1}'. (DAWPA0003)
+    DifferentPermissionsAssigned = Principal '{0}' in workspace '{1}' has permissions '{2}', but desired permissions are '{3}'. (DAWPA0004)
+    ErrorGettingPermissionAssignment = Error getting permission assignment for principal '{0}' in workspace '{1}': {2}. (DAWPA0005)
+    AssigningPermissions = Assigning permissions '{0}' to principal '{1}' in workspace '{2}'. (DAWPA0006)
+    PermissionsAssigned = Permissions '{0}' have been successfully assigned to principal '{1}' in workspace '{2}'. (DAWPA0007)
+    FailedToAssignPermissions = Failed to assign permissions '{0}' to principal '{1}' in workspace '{2}': {3}. (DAWPA0008)
+    UnassigningPermissions = Unassigning permissions from principal '{0}' in workspace '{1}'. (DAWPA0009)
+    PermissionsUnassigned = Permissions have been successfully unassigned from principal '{0}' in workspace '{1}'. (DAWPA0010)
+    FailedToUnassignPermissions = Failed to unassign permissions from principal '{0}' in workspace '{1}': {2}. (DAWPA0011)
+    InvalidWorkspaceUrl = The WorkspaceUrl '{0}' is not valid. It must start with 'https://'. (DAWPA0012)
+    InvalidAccountId = The AccountId '{0}' is not valid. It must be a valid GUID. (DAWPA0013)
+    InvalidWorkspaceId = The WorkspaceId '{0}' is not valid. It must be numeric. (DAWPA0014)
+    InvalidPrincipalId = The PrincipalId '{0}' is not valid. It must be numeric. (DAWPA0015)
+'@

@@ -1,0 +1,16 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Assign admin permission to workspace
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Workspace admin permission assignment
+      type: DatabricksDsc/DatabricksAccountWorkspacePermissionAssignment
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        WorkspaceId: '953475542402434'
+        PrincipalId: '1234567890123456'
+        Permissions:
+        - 'ADMIN'

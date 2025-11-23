@@ -1,0 +1,36 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Assign multiple principals to workspace
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: User permission assignment
+      type: DatabricksDsc/DatabricksAccountWorkspacePermissionAssignment
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        WorkspaceId: '953475542402434'
+        PrincipalId: '1111111111111111'  # User ID
+        Permissions:
+        - 'USER'
+    - name: Admin permission assignment
+      type: DatabricksDsc/DatabricksAccountWorkspacePermissionAssignment
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        WorkspaceId: '953475542402434'
+        PrincipalId: '2222222222222222'  # Service Principal ID
+        Permissions:
+        - 'ADMIN'
+    - name: Group permission assignment
+      type: DatabricksDsc/DatabricksAccountWorkspacePermissionAssignment
+      properties:
+        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        WorkspaceId: '953475542402434'
+        PrincipalId: '3333333333333333'  # Group ID
+        Permissions:
+        - 'USER'
