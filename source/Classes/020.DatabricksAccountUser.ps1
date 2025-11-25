@@ -133,6 +133,30 @@ class DatabricksAccountUser : DatabricksAccountResourceBase
         )
     }
 
+    <#
+        Helper method to build the correct API endpoint based on URL type.
+        If AccountId is provided and URL is an account console URL, uses account-level endpoint.
+        If URL is a workspace URL, uses workspace-level account proxy endpoint.
+    #>
+    hidden [System.String] GetUserEndpoint([System.String] $accountId, [System.String] $path)
+    {
+        $baseUrl = if ([string]::IsNullOrEmpty($this.WorkspaceUrl)) { $this.AccountsUrl } else { $this.WorkspaceUrl }
+
+        # Check if this is an account console URL
+        $isAccountUrl = $baseUrl -match '(accounts\.(cloud|azure|gcp)\.databricks\.(com|net))'
+
+        if ($isAccountUrl -and -not [string]::IsNullOrEmpty($accountId))
+        {
+            # Use standard account-level endpoint
+            return "/api/2.0/accounts/$accountId/scim/v2/Users$path"
+        }
+        else
+        {
+            # Use workspace proxy to account-level endpoint
+            return "/api/2.0/account/scim/v2/Users$path"
+        }
+    }
+
     [DatabricksAccountUser] Get()
     {
         return ([ResourceBase] $this).Get()
@@ -170,11 +194,13 @@ class DatabricksAccountUser : DatabricksAccountResourceBase
 
         try
         {
-            # Use SCIM filter to find user by username
+            # Use SCIM filter to find user by userName
             $filter = "userName eq '$($properties.UserName)'"
+            $endpoint = $this.GetUserEndpoint($properties.AccountId, "?filter=$filter")
+
             $response = $this.InvokeDatabricksApi(
                 'GET',
-                "/api/2.0/accounts/$($properties.AccountId)/scim/v2/Users?filter=$filter",
+                $endpoint,
                 $null
             )
 
@@ -280,9 +306,11 @@ class DatabricksAccountUser : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetUserEndpoint($this.AccountId, '')
+
                     $this.InvokeDatabricksApi(
                         'POST',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/Users",
+                        $endpoint,
                         $body
                     )
 
@@ -309,9 +337,11 @@ class DatabricksAccountUser : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetUserEndpoint($this.AccountId, "/$($this.Id)")
+
                     $this.InvokeDatabricksApi(
                         'DELETE',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/Users/$($this.Id)",
+                        $endpoint,
                         $null
                     )
 
@@ -344,9 +374,11 @@ class DatabricksAccountUser : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetUserEndpoint($this.AccountId, "/$($this.Id)")
+
                     $this.InvokeDatabricksApi(
                         'PATCH',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/Users/$($this.Id)",
+                        $endpoint,
                         $body
                     )
 
