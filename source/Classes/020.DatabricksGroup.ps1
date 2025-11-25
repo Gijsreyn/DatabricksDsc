@@ -299,16 +299,36 @@ class DatabricksGroup : DatabricksResourceBase
             }
             else
             {
-                # Remove the group since it exists
+                # Remove the group since it exists (delete the entire group)
                 Write-Verbose -Message (
                     $this.localizedData.RemovingGroup -f $this.DisplayName
                 )
+
+                # Retrieve the group ID if not already set
+                $groupId = $this.Id
+                if ([string]::IsNullOrEmpty($groupId))
+                {
+                    $response = $this.InvokeDatabricksApi(
+                        'GET',
+                        '/api/2.0/preview/scim/v2/Groups',
+                        $null
+                    )
+
+                    $group = $response.Resources | Where-Object -FilterScript {
+                        $_.displayName -eq $this.DisplayName
+                    } | Select-Object -First 1
+
+                    if ($group)
+                    {
+                        $groupId = $group.id
+                    }
+                }
 
                 try
                 {
                     $this.InvokeDatabricksApi(
                         'DELETE',
-                        "/api/2.0/preview/scim/v2/Groups/$($this.Id)",
+                        "/api/2.0/preview/scim/v2/Groups/$groupId",
                         $null
                     )
 
@@ -336,13 +356,33 @@ class DatabricksGroup : DatabricksResourceBase
                     $this.localizedData.UpdatingGroup -f $this.DisplayName
                 )
 
+                # Retrieve the group ID if not already set
+                $groupId = $this.Id
+                if ([string]::IsNullOrEmpty($groupId))
+                {
+                    $response = $this.InvokeDatabricksApi(
+                        'GET',
+                        '/api/2.0/preview/scim/v2/Groups',
+                        $null
+                    )
+
+                    $group = $response.Resources | Where-Object -FilterScript {
+                        $_.displayName -eq $this.DisplayName
+                    } | Select-Object -First 1
+
+                    if ($group)
+                    {
+                        $groupId = $group.id
+                    }
+                }
+
                 $body = $this.BuildGroupPatchPayload($properties)
 
                 try
                 {
                     $this.InvokeDatabricksApi(
                         'PATCH',
-                        "/api/2.0/preview/scim/v2/Groups/$($this.Id)",
+                        "/api/2.0/preview/scim/v2/Groups/$groupId",
                         $body
                     )
 

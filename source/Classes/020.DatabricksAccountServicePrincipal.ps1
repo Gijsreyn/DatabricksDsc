@@ -118,6 +118,30 @@ class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
         )
     }
 
+    <#
+        Helper method to build the correct API endpoint based on URL type.
+        If AccountId is provided and URL is an account console URL, uses account-level endpoint.
+        If URL is a workspace URL, uses workspace-level account proxy endpoint.
+    #>
+    hidden [System.String] GetServicePrincipalEndpoint([System.String] $accountId, [System.String] $path)
+    {
+        $baseUrl = if ([string]::IsNullOrEmpty($this.WorkspaceUrl)) { $this.AccountsUrl } else { $this.WorkspaceUrl }
+
+        # Check if this is an account console URL
+        $isAccountUrl = $baseUrl -match '(accounts\.(cloud|azure|gcp)\.databricks\.(com|net))'
+
+        if ($isAccountUrl -and -not [string]::IsNullOrEmpty($accountId))
+        {
+            # Use standard account-level endpoint
+            return "/api/2.0/accounts/$accountId/scim/v2/ServicePrincipals$path"
+        }
+        else
+        {
+            # Use workspace proxy to account-level endpoint
+            return "/api/2.0/account/scim/v2/ServicePrincipals$path"
+        }
+    }
+
     [DatabricksAccountServicePrincipal] Get()
     {
         return ([ResourceBase] $this).Get()
@@ -157,9 +181,11 @@ class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
         {
             # Use SCIM filter to find service principal by applicationId
             $filter = "applicationId eq '$($properties.ApplicationId)'"
+            $endpoint = $this.GetServicePrincipalEndpoint($properties.AccountId, "?filter=$filter")
+
             $response = $this.InvokeDatabricksApi(
                 'GET',
-                "/api/2.0/accounts/$($properties.AccountId)/scim/v2/ServicePrincipals?filter=$filter",
+                $endpoint,
                 $null
             )
 
@@ -239,9 +265,11 @@ class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetServicePrincipalEndpoint($this.AccountId, '')
+
                     $this.InvokeDatabricksApi(
                         'POST',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/ServicePrincipals",
+                        $endpoint,
                         $body
                     )
 
@@ -268,9 +296,11 @@ class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetServicePrincipalEndpoint($this.AccountId, "/$($this.Id)")
+
                     $this.InvokeDatabricksApi(
                         'DELETE',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/ServicePrincipals/$($this.Id)",
+                        $endpoint,
                         $null
                     )
 
@@ -303,9 +333,11 @@ class DatabricksAccountServicePrincipal : DatabricksAccountResourceBase
 
                 try
                 {
+                    $endpoint = $this.GetServicePrincipalEndpoint($this.AccountId, "/$($this.Id)")
+
                     $this.InvokeDatabricksApi(
                         'PATCH',
-                        "/api/2.0/accounts/$($this.AccountId)/scim/v2/ServicePrincipals/$($this.Id)",
+                        $endpoint,
                         $body
                     )
 

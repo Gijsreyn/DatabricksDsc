@@ -561,6 +561,12 @@ Describe 'DatabricksGroup\GetCurrentState()' -Tag 'GetCurrentState' {
                     Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
                         param ($Method, $Path, $Body)
 
+                        # Verify the filter parameter is used
+                        if ($Path -like '*filter=*')
+                        {
+                            $Path | Should -Match 'filter=displayName%20eq%20%22data-engineers%22'
+                        }
+
                         return @{
                             Resources = @(
                                 @{
@@ -705,6 +711,78 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
         }
     }
 
+    Context 'When updating an existing group without Id' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    DisplayName  = 'existing-group'
+                    Members      = @(
+                        [GroupMember]@{ Value = 'user-002' }
+                    )
+                    _exist       = $true
+                }
+
+                $script:apiCallCount = 0
+                $script:getCallMade = $false
+                $script:patchCallMade = $false
+
+                $script:mockDatabricksGroupInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        $script:apiCallCount++
+
+                        if ($Method -eq 'GET')
+                        {
+                            $script:getCallMade = $true
+                            return @{
+                                Resources = @(
+                                    @{
+                                        id          = '12345'
+                                        displayName = 'existing-group'
+                                    }
+                                )
+                            }
+                        }
+                        elseif ($Method -eq 'PATCH')
+                        {
+                            $script:patchCallMade = $true
+                            $script:patchPath = $Path
+                        }
+                    } -PassThru |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPatchPayload' -Value {
+                        param ($Properties)
+
+                        return @{
+                            schemas    = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
+                            Operations = @(
+                                @{
+                                    op    = 'add'
+                                    path  = 'members'
+                                    value = @(@{ value = 'user-002' })
+                                }
+                            )
+                        }
+                    }
+            }
+        }
+
+        It 'Should retrieve group ID before PATCH' {
+            InModuleScope -ScriptBlock {
+                $script:mockDatabricksGroupInstance.Modify(@{
+                        Members = @([GroupMember]@{ Value = 'user-002' })
+                    })
+
+                $script:getCallMade | Should -BeTrue
+                $script:patchCallMade | Should -BeTrue
+                $script:patchPath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
+                $script:apiCallCount | Should -Be 2
+            }
+        }
+    }
+
     Context 'When updating an existing group' {
         BeforeAll {
             InModuleScope -ScriptBlock {
@@ -757,6 +835,61 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                 $script:apiMethod | Should -Be 'PATCH'
                 $script:apiPath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
                 $script:apiBody.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
+            }
+        }
+    }
+
+    Context 'When removing a group without Id' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
+                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
+                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    DisplayName  = 'group-to-remove'
+                    _exist       = $false
+                }
+
+                $script:apiCallCount = 0
+                $script:getCallMade = $false
+                $script:deleteCallMade = $false
+
+                $script:mockDatabricksGroupInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        $script:apiCallCount++
+
+                        if ($Method -eq 'GET')
+                        {
+                            $script:getCallMade = $true
+                            return @{
+                                Resources = @(
+                                    @{
+                                        id          = '12345'
+                                        displayName = 'group-to-remove'
+                                    }
+                                )
+                            }
+                        }
+                        elseif ($Method -eq 'DELETE')
+                        {
+                            $script:deleteCallMade = $true
+                            $script:deletePath = $Path
+                        }
+                    }
+            }
+        }
+
+        It 'Should retrieve group ID before DELETE' {
+            InModuleScope -ScriptBlock {
+                $script:mockDatabricksGroupInstance.Modify(@{
+                        _exist = $false
+                    })
+
+                $script:getCallMade | Should -BeTrue
+                $script:deleteCallMade | Should -BeTrue
+                $script:deletePath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
+                $script:apiCallCount | Should -Be 2
             }
         }
     }

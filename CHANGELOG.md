@@ -5,6 +5,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `DatabricksGroup`
+  - Updated `GetCurrentState()` to retrieve all groups and filter locally instead
+    of using SCIM filter parameters, aligning with `DatabricksUser` pattern
+  - Enhanced `Modify()` method to automatically retrieve group ID when not set
+    before PATCH or DELETE operations
+- `DatabricksAccountServicePrincipal`
+  - Added workspace URL fallback support via `GetServicePrincipalEndpoint()` helper
+  - Automatically routes to workspace proxy endpoint (`/api/2.0/account/scim/v2/ServicePrincipals`)
+    when using workspace URL instead of account console URL
+  - Enables users without account-level console access to manage account-level
+    service principals through their workspace
+- `DatabricksAccountUser`
+  - Added workspace URL fallback support via `GetUserEndpoint()` helper
+  - Automatically routes to workspace proxy endpoint (`/api/2.0/account/scim/v2/Users`)
+    when using workspace URL instead of account console URL
+  - Enables users without account-level console access to manage account-level
+    users through their workspace
+
+### Fixed
+
+- `DatabricksGroup`
+  - Fixed issue where empty `$this.Id` caused malformed PATCH and DELETE URLs
+
 ## [0.4.0] - 2025-11-23
 
 ### Added

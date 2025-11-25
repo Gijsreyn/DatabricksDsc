@@ -550,7 +550,7 @@ Describe 'DatabricksAccountUser\Modify()' -Tag 'Modify' {
                 )
 
                 $script:mockInvokeApiMethod | Should -Be 'PATCH'
-                $script:mockInvokeApiPath | Should -Match '/api/2.0/accounts/.*/scim/v2/Users/user-123'
+                $script:mockInvokeApiPath | Should -Match '(/api/2.0/accounts/.*/scim/v2/Users/user-123|/api/2.0/account/scim/v2/Users/user-123)'
                 $script:mockInvokeApiBody.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
             }
         }
@@ -595,7 +595,7 @@ Describe 'DatabricksAccountUser\Modify()' -Tag 'Modify' {
                 )
 
                 $script:mockInvokeApiMethod | Should -Be 'POST'
-                $script:mockInvokeApiPath | Should -Match '/api/2.0/accounts/.*/scim/v2/Users'
+                $script:mockInvokeApiPath | Should -Match '(/api/2.0/accounts/.*/scim/v2/Users|/api/2.0/account/scim/v2/Users)'
                 $script:mockInvokeApiBody.userName | Should -Be 'newuser@example.com'
                 $script:mockInvokeApiBody.schemas | Should -Contain 'urn:ietf:params:scim:schemas:core:2.0:User'
             }
@@ -631,7 +631,7 @@ Describe 'DatabricksAccountUser\Modify()' -Tag 'Modify' {
                 $script:mockInstance.Modify(@{ _exist = $false })
 
                 $script:mockInvokeApiMethod | Should -Be 'DELETE'
-                $script:mockInvokeApiPath | Should -Match '/api/2.0/accounts/.*/scim/v2/Users/user-123'
+                $script:mockInvokeApiPath | Should -Match '(/api/2.0/accounts/.*/scim/v2/Users/user-123|/api/2.0/account/scim/v2/Users/user-123)'
                 $script:mockInvokeApiBody | Should -BeNullOrEmpty
             }
         }
