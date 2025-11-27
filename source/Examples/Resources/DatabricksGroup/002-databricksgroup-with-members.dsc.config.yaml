@@ -1,17 +1,15 @@
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 resources:
-- name: Create workspace group with members
+- name: Create workspace group with entitlements
   type: Microsoft.DSC/PowerShell
   properties:
     resources:
-    - name: Group with user members
+    - name: Group with entitlements
       type: DatabricksDsc/DatabricksGroup
       properties:
         WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
         AccessToken: '<YourAccessTokenHere>'
         DisplayName: 'data-engineers'
-        Members:
-        - Value: '1234567890123456'  # User or group ID
-          Display: 'user@example.com'
-        - Value: '6543210987654321'
-          Display: 'another.user@example.com'
+        Entitlements:
+        - Value: 'allow-cluster-create'
+        - Value: 'databricks-sql-access'

@@ -5,6 +5,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `DatabricksGroupMember` resource for managing individual group memberships
+  - Provides granular control over adding/removing members from groups
+  - Key properties: `GroupDisplayName`, `MemberIdentifier`, `MemberType`
+  - Supports both User and ServicePrincipal member types
+  - Uses `_exist` property: `true` to add member, `false` to remove member
+  - Uses workspace-level SCIM API PATCH operations:
+    - Add: `{"op":"add","value":{"members":[{"value":"<memberId>"}]}}`
+    - Remove: `{"op":"remove","path":"members[value eq \"<memberId>\"]"}`
+  - Automatically retrieves group ID and member ID dynamically
+  - MemberIdentifier: email for users, application ID for service principals
+  - Validates WorkspaceUrl, GroupDisplayName, and MemberIdentifier
+  - Includes comprehensive unit tests covering all scenarios
+  - Includes example configurations for various use cases
+
+### Changed
+
+- **BREAKING CHANGE**: `DatabricksGroup`
+  - **Removed `Members` property** - member management is now handled exclusively
+    by the `DatabricksGroupMember` resource for granular control
+  - Changed `Modify()` method to use PUT instead of PATCH for group updates
+  - Now performs full group replacement (displayName, entitlements, roles only)
+  - Removed `BuildGroupPatchPayload()` helper method
+  - Removed member-related code from `BuildGroupPayload()` and `CreateFromApiData()`
+  - Migration:
+    - Remove `Members` property from `DatabricksGroup` configurations
+    - Use `DatabricksGroupMember` resource for all member add/remove operations
+    - `DatabricksGroup` now only manages group metadata
+      (displayName, entitlements, roles)
+
 ## [0.4.2] - 2025-11-26
 
 ### Changed

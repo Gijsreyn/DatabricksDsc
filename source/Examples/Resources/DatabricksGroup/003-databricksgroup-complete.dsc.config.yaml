@@ -11,11 +11,6 @@ resources:
         AccessToken: '<YourAccessTokenHere>'
         DisplayName: 'data-engineers'
         ExternalId: 'external-group-123'
-        Members:
-        - Value: '1234567890123456'
-          Display: 'user@example.com'
-        - Value: '6543210987654321'
-          Display: 'another.user@example.com'
         Entitlements:
         - Value: 'allow-cluster-create'
         - Value: 'allow-instance-pool-create'
