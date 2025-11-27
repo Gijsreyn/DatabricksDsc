@@ -7,8 +7,11 @@
         The `DatabricksGroup` DSC resource is used to create, modify, or remove
         groups in a Databricks workspace using the workspace-level SCIM API.
 
-        This resource manages groups within a specific workspace. Groups can contain
-        users and other groups, and can be assigned entitlements and roles.
+        This resource manages groups within a specific workspace. Groups can be
+        assigned entitlements and roles.
+
+        **Note**: Individual member management (adding/removing users or service principals)
+        should be handled using the `DatabricksGroupMember` resource for granular control.
 
         ## Requirements
 
@@ -29,9 +32,6 @@
 
     .PARAMETER ExternalId
         An external identifier for the group (optional).
-
-    .PARAMETER Members
-        An array of members (users or groups) in this group.
 
     .PARAMETER Entitlements
         An array of entitlements assigned to the group.
@@ -66,10 +66,6 @@ class DatabricksGroup : DatabricksResourceBase
     [DscProperty()]
     [System.String]
     $ExternalId
-
-    [DscProperty()]
-    [GroupMember[]]
-    $Members
 
     [DscProperty()]
     [GroupEntitlement[]]
@@ -160,23 +156,6 @@ class DatabricksGroup : DatabricksResourceBase
                 $currentState.Id = $group.id
                 $currentState.ExternalId = $group.externalId
 
-                # Convert members
-                if ($group.members)
-                {
-                    $currentState.Members = @()
-                    foreach ($member in $group.members)
-                    {
-                        $currentState.Members += [GroupMember]@{
-                            Value   = $member.value
-                            Display = $member.display
-                            Ref     = $member.'$ref'
-                        }
-                    }
-
-                    # Sort members for consistent comparison
-                    $currentState.Members = $currentState.Members | Sort-Object
-                }
-
                 # Convert entitlements
                 if ($group.entitlements)
                 {
@@ -228,7 +207,6 @@ class DatabricksGroup : DatabricksResourceBase
             {
                 # When group doesn't exist, set all other properties to $null
                 $currentState.ExternalId = $null
-                $currentState.Members = $null
                 $currentState.Entitlements = $null
                 $currentState.Roles = $null
                 $currentState.Groups = $null
@@ -376,12 +354,15 @@ class DatabricksGroup : DatabricksResourceBase
                     }
                 }
 
-                $body = $this.BuildGroupPatchPayload($properties)
+                # Build full replacement payload (PUT requires all properties)
+                $body = $this.BuildGroupPayload($properties)
+                $body.displayName = $this.DisplayName
+                $body.schemas = @('urn:ietf:params:scim:schemas:core:2.0:Group')
 
                 try
                 {
                     $this.InvokeDatabricksApi(
-                        'PATCH',
+                        'PUT',
                         "/api/2.0/preview/scim/v2/Groups/$groupId",
                         $body
                     )
@@ -415,22 +396,6 @@ class DatabricksGroup : DatabricksResourceBase
             $body.externalId = $this.ExternalId
         }
 
-        if ($properties.ContainsKey('Members') -and $this.Members)
-        {
-            $body.members = @()
-            # Sort members before sending to API
-            $sortedMembers = $this.Members | Sort-Object
-
-            foreach ($member in $sortedMembers)
-            {
-                $memberObj = @{
-                    value = $member.Value
-                }
-
-                $body.members += $memberObj
-            }
-        }
-
         if ($properties.ContainsKey('Entitlements') -and $this.Entitlements)
         {
             $body.entitlements = @()
@@ -456,83 +421,6 @@ class DatabricksGroup : DatabricksResourceBase
                 $body.roles += @{
                     value = $role.Value
                 }
-            }
-        }
-
-        return $body
-    }
-
-    <#
-        Helper method to build the SCIM PATCH payload for group updates.
-        Uses SCIM PatchOp format as per documentation.
-    #>
-    hidden [System.Collections.Hashtable] BuildGroupPatchPayload([System.Collections.Hashtable] $properties)
-    {
-        $body = @{
-            schemas    = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
-            Operations = @()
-        }
-
-        # Handle Members updates
-        if ($properties.ContainsKey('Members') -and $null -ne $this.Members)
-        {
-            # Sort members before sending to API
-            $sortedMembers = $this.Members | Sort-Object
-
-            $memberValues = @()
-            foreach ($member in $sortedMembers)
-            {
-                $memberValues += @{
-                    value = $member.Value
-                }
-            }
-
-            $body.Operations += @{
-                op    = 'add'
-                path  = 'members'
-                value = $memberValues
-            }
-        }
-
-        # Handle Entitlements updates
-        if ($properties.ContainsKey('Entitlements') -and $null -ne $this.Entitlements)
-        {
-            # Sort entitlements before sending to API
-            $sortedEntitlements = $this.Entitlements | Sort-Object
-
-            $entitlementValues = @()
-            foreach ($entitlement in $sortedEntitlements)
-            {
-                $entitlementValues += @{
-                    value = $entitlement.Value
-                }
-            }
-
-            $body.Operations += @{
-                op    = 'add'
-                path  = 'entitlements'
-                value = $entitlementValues
-            }
-        }
-
-        # Handle Roles updates
-        if ($properties.ContainsKey('Roles') -and $null -ne $this.Roles)
-        {
-            # Sort roles before sending to API
-            $sortedRoles = $this.Roles | Sort-Object
-
-            $roleValues = @()
-            foreach ($role in $sortedRoles)
-            {
-                $roleValues += @{
-                    value = $role.Value
-                }
-            }
-
-            $body.Operations += @{
-                op    = 'add'
-                path  = 'roles'
-                value = $roleValues
             }
         }
 
@@ -633,23 +521,6 @@ class DatabricksGroup : DatabricksResourceBase
         if ($ApiData.id)
         {
             $exportInstance.Id = $ApiData.id
-        }
-
-        # Convert members
-        if ($ApiData.members)
-        {
-            $exportInstance.Members = @()
-            foreach ($member in $ApiData.members)
-            {
-                $exportInstance.Members += [GroupMember]@{
-                    Value   = $member.value
-                    Display = $member.display
-                    Ref     = $member.'$ref'
-                }
-            }
-
-            # Sort members for consistency
-            $exportInstance.Members = $exportInstance.Members | Sort-Object
         }
 
         # Convert entitlements

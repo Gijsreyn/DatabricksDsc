@@ -300,42 +300,7 @@ Describe 'DatabricksGroup\Get()' -Tag 'Get' {
             }
         }
 
-        Context 'When group exists with members' {
-            BeforeAll {
-                InModuleScope -ScriptBlock {
-                    $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
-                        WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                        AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                        DisplayName  = 'data-engineers'
-                    }
 
-                    $script:mockDatabricksGroupInstance |
-                        Add-Member -Force -MemberType 'ScriptMethod' -Name 'GetCurrentState' -Value {
-                            return @{
-                                WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                                AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                                DisplayName  = 'data-engineers'
-                                Id           = '12345'
-                                Members      = @(
-                                    [GroupMember]@{ Value = 'user-001'; Display = 'user1@example.com' }
-                                    [GroupMember]@{ Value = 'user-002'; Display = 'user2@example.com' }
-                                )
-                                _exist       = $true
-                            }
-                        } -PassThru
-                }
-            }
-
-            It 'Should return the correct values' {
-                InModuleScope -ScriptBlock {
-                    $currentState = $script:mockDatabricksGroupInstance.Get()
-
-                    $currentState.Members.Count | Should -Be 2
-                    $currentState.Members[0].Value | Should -Be 'user-001'
-                    $currentState.Members[1].Value | Should -Be 'user-002'
-                }
-            }
-        }
 
         Context 'When group exists with entitlements' {
             BeforeAll {
@@ -447,8 +412,8 @@ Describe 'DatabricksGroup\Test()' -Tag 'Test' {
                     $script:mockDatabricksGroupInstance |
                         Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
                             return @{
-                                Members = @(
-                                    [GroupMember]@{ Value = 'user-001' }
+                                Entitlements = @(
+                                    [GroupEntitlement]@{ Value = 'allow-cluster-create' }
                                 )
                             }
                         } -PassThru |
@@ -515,8 +480,8 @@ Describe 'DatabricksGroup\Set()' -Tag 'Set' {
                     $script:mockDatabricksGroupInstance |
                         Add-Member -Force -MemberType 'ScriptMethod' -Name 'Compare' -Value {
                             return @{
-                                Property      = 'Members'
-                                ExpectedValue = @([GroupMember]@{ Value = 'user-001' })
+                                Property      = 'Entitlements'
+                                ExpectedValue = @([GroupEntitlement]@{ Value = 'allow-cluster-create' })
                                 ActualValue   = @()
                             }
                         } -PassThru |
@@ -573,13 +538,6 @@ Describe 'DatabricksGroup\GetCurrentState()' -Tag 'GetCurrentState' {
                                     id          = '12345'
                                     displayName = 'data-engineers'
                                     externalId  = 'ext-123'
-                                    members     = @(
-                                        @{
-                                            value   = 'user-001'
-                                            display = 'user1@example.com'
-                                            '$ref'  = 'Users/user-001'
-                                        }
-                                    )
                                     entitlements = @(
                                         @{ value = 'allow-cluster-create' }
                                     )
@@ -610,9 +568,6 @@ Describe 'DatabricksGroup\GetCurrentState()' -Tag 'GetCurrentState' {
                 $result.DisplayName | Should -Be 'data-engineers'
                 $result.Id | Should -Be '12345'
                 $result.ExternalId | Should -Be 'ext-123'
-                $result.Members.Count | Should -Be 1
-                $result.Members[0].Value | Should -Be 'user-001'
-                $result.Members[0].Display | Should -Be 'user1@example.com'
                 $result.Entitlements.Count | Should -Be 1
                 $result.Entitlements[0].Value | Should -Be 'allow-cluster-create'
                 $result.Roles.Count | Should -Be 1
@@ -650,7 +605,6 @@ Describe 'DatabricksGroup\GetCurrentState()' -Tag 'GetCurrentState' {
                     })
 
                 $result._exist | Should -BeFalse
-                $result.Members | Should -BeNullOrEmpty
                 $result.Entitlements | Should -BeNullOrEmpty
                 $result.Id | Should -BeNullOrEmpty
             }
@@ -666,8 +620,8 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                     WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
                     AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
                     DisplayName  = 'new-group'
-                    Members      = @(
-                        [GroupMember]@{ Value = 'user-001' }
+                    Entitlements = @(
+                        [GroupEntitlement]@{ Value = 'allow-cluster-create' }
                     )
                     _exist       = $true
                 }
@@ -687,8 +641,8 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                         param ($Properties)
 
                         return @{
-                            members = @(
-                                @{ value = 'user-001' }
+                            entitlements = @(
+                                @{ value = 'allow-cluster-create' }
                             )
                         }
                     }
@@ -698,8 +652,8 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
         It 'Should call API with POST method' {
             InModuleScope -ScriptBlock {
                 $script:mockDatabricksGroupInstance.Modify(@{
-                        _exist  = $true
-                        Members = @([GroupMember]@{ Value = 'user-001' })
+                        _exist       = $true
+                        Entitlements = @([GroupEntitlement]@{ Value = 'allow-cluster-create' })
                     })
 
                 $script:apiCallMade | Should -BeTrue
@@ -718,15 +672,15 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                     WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
                     AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
                     DisplayName  = 'existing-group'
-                    Members      = @(
-                        [GroupMember]@{ Value = 'user-002' }
+                    Entitlements = @(
+                        [GroupEntitlement]@{ Value = 'allow-cluster-create' }
                     )
                     _exist       = $true
                 }
 
                 $script:apiCallCount = 0
                 $script:getCallMade = $false
-                $script:patchCallMade = $false
+                $script:putCallMade = $false
 
                 $script:mockDatabricksGroupInstance |
                     Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
@@ -746,38 +700,31 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                                 )
                             }
                         }
-                        elseif ($Method -eq 'PATCH')
+                        elseif ($Method -eq 'PUT')
                         {
-                            $script:patchCallMade = $true
-                            $script:patchPath = $Path
+                            $script:putCallMade = $true
+                            $script:putPath = $Path
                         }
                     } -PassThru |
-                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPatchPayload' -Value {
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPayload' -Value {
                         param ($Properties)
 
                         return @{
-                            schemas    = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
-                            Operations = @(
-                                @{
-                                    op    = 'add'
-                                    path  = 'members'
-                                    value = @(@{ value = 'user-002' })
-                                }
-                            )
+                            entitlements = @(@{ value = 'allow-cluster-create' })
                         }
                     }
             }
         }
 
-        It 'Should retrieve group ID before PATCH' {
+        It 'Should retrieve group ID before PUT' {
             InModuleScope -ScriptBlock {
                 $script:mockDatabricksGroupInstance.Modify(@{
-                        Members = @([GroupMember]@{ Value = 'user-002' })
+                        Entitlements = @([GroupEntitlement]@{ Value = 'allow-cluster-create' })
                     })
 
                 $script:getCallMade | Should -BeTrue
-                $script:patchCallMade | Should -BeTrue
-                $script:patchPath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
+                $script:putCallMade | Should -BeTrue
+                $script:putPath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
                 $script:apiCallCount | Should -Be 2
             }
         }
@@ -791,8 +738,8 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                     AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
                     DisplayName  = 'existing-group'
                     Id           = '12345'
-                    Members      = @(
-                        [GroupMember]@{ Value = 'user-002' }
+                    Entitlements = @(
+                        [GroupEntitlement]@{ Value = 'allow-cluster-create' }
                     )
                     _exist       = $true
                 }
@@ -808,33 +755,27 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
                         $script:apiPath = $Path
                         $script:apiBody = $Body
                     } -PassThru |
-                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPatchPayload' -Value {
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPayload' -Value {
                         param ($Properties)
 
                         return @{
-                            schemas    = @('urn:ietf:params:scim:api:messages:2.0:PatchOp')
-                            Operations = @(
-                                @{
-                                    op    = 'add'
-                                    path  = 'members'
-                                    value = @(@{ value = 'user-002' })
-                                }
-                            )
+                            entitlements = @(@{ value = 'allow-cluster-create' })
                         }
                     }
             }
         }
 
-        It 'Should call API with PATCH method' {
+        It 'Should call API with PUT method' {
             InModuleScope -ScriptBlock {
                 $script:mockDatabricksGroupInstance.Modify(@{
-                        Members = @([GroupMember]@{ Value = 'user-002' })
+                        Entitlements = @([GroupEntitlement]@{ Value = 'allow-cluster-create' })
                     })
 
                 $script:apiCallMade | Should -BeTrue
-                $script:apiMethod | Should -Be 'PATCH'
+                $script:apiMethod | Should -Be 'PUT'
                 $script:apiPath | Should -Be '/api/2.0/preview/scim/v2/Groups/12345'
-                $script:apiBody.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
+                $script:apiBody.schemas | Should -Contain 'urn:ietf:params:scim:schemas:core:2.0:Group'
+                $script:apiBody.displayName | Should -Be 'existing-group'
             }
         }
     }
@@ -1014,7 +955,7 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
 
                         throw 'API Error: Group update failed'
                     } -PassThru |
-                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPatchPayload' -Value {
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'BuildGroupPayload' -Value {
                         param ($Properties)
 
                         return @{}
@@ -1026,7 +967,7 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
             InModuleScope -ScriptBlock {
                 {
                     $script:mockDatabricksGroupInstance.Modify(@{
-                            Members = @([GroupMember]@{ Value = 'user-002' })
+                            Entitlements = @([GroupEntitlement]@{ Value = 'allow-cluster-create' })
                         })
                 } | Should -Throw '*Failed to update the group*'
             }
@@ -1035,34 +976,6 @@ Describe 'DatabricksGroup\Modify()' -Tag 'Modify' {
 }
 
 Describe 'DatabricksGroup\BuildGroupPayload()' -Tag 'BuildGroupPayload' {
-    Context 'When building payload with members' {
-        BeforeAll {
-            InModuleScope -ScriptBlock {
-                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
-                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                    DisplayName  = 'test-group'
-                    Members      = @(
-                        [GroupMember]@{ Value = 'user-001' }
-                        [GroupMember]@{ Value = 'user-002' }
-                    )
-                }
-            }
-        }
-
-        It 'Should return payload with members' {
-            InModuleScope -ScriptBlock {
-                $result = $script:mockDatabricksGroupInstance.BuildGroupPayload(@{
-                        Members = $script:mockDatabricksGroupInstance.Members
-                    })
-
-                $result.members.Count | Should -Be 2
-                $result.members[0].value | Should -Be 'user-001'
-                $result.members[1].value | Should -Be 'user-002'
-            }
-        }
-    }
-
     Context 'When building payload with entitlements' {
         BeforeAll {
             InModuleScope -ScriptBlock {
@@ -1139,97 +1052,6 @@ Describe 'DatabricksGroup\BuildGroupPayload()' -Tag 'BuildGroupPayload' {
     }
 }
 
-Describe 'DatabricksGroup\BuildGroupPatchPayload()' -Tag 'BuildGroupPatchPayload' {
-    Context 'When building PATCH payload with members' {
-        BeforeAll {
-            InModuleScope -ScriptBlock {
-                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
-                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                    DisplayName  = 'test-group'
-                    Members      = @(
-                        [GroupMember]@{ Value = 'user-001' }
-                    )
-                }
-            }
-        }
-
-        It 'Should return PATCH payload with operations' {
-            InModuleScope -ScriptBlock {
-                $result = $script:mockDatabricksGroupInstance.BuildGroupPatchPayload(@{
-                        Members = $script:mockDatabricksGroupInstance.Members
-                    })
-
-                $result.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
-                $result.Operations.Count | Should -Be 1
-                $result.Operations[0].op | Should -Be 'add'
-                $result.Operations[0].path | Should -Be 'members'
-                $result.Operations[0].value.Count | Should -Be 1
-            }
-        }
-    }
-
-    Context 'When building PATCH payload with Entitlements' {
-        BeforeAll {
-            InModuleScope -ScriptBlock {
-                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
-                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                    DisplayName  = 'test-group'
-                    Entitlements = @(
-                        [GroupEntitlement]@{ Value = 'allow-cluster-create' }
-                    )
-                }
-            }
-        }
-
-        It 'Should return PATCH payload with entitlements operations' {
-            InModuleScope -ScriptBlock {
-                $result = $script:mockDatabricksGroupInstance.BuildGroupPatchPayload(@{
-                        Entitlements = $script:mockDatabricksGroupInstance.Entitlements
-                    })
-
-                $result.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
-                $result.Operations.Count | Should -Be 1
-                $result.Operations[0].op | Should -Be 'add'
-                $result.Operations[0].path | Should -Be 'entitlements'
-                $result.Operations[0].value.Count | Should -Be 1
-                $result.Operations[0].value[0].value | Should -Be 'allow-cluster-create'
-            }
-        }
-    }
-
-    Context 'When building PATCH payload with Roles' {
-        BeforeAll {
-            InModuleScope -ScriptBlock {
-                $script:mockDatabricksGroupInstance = [DatabricksGroup] @{
-                    WorkspaceUrl = 'https://adb-1234567890123456.12.azuredatabricks.net'
-                    AccessToken  = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
-                    DisplayName  = 'test-group'
-                    Roles        = @(
-                        [GroupRole]@{ Value = 'arn:aws:iam::123:instance-profile/test' }
-                    )
-                }
-            }
-        }
-
-        It 'Should return PATCH payload with roles operations' {
-            InModuleScope -ScriptBlock {
-                $result = $script:mockDatabricksGroupInstance.BuildGroupPatchPayload(@{
-                        Roles = $script:mockDatabricksGroupInstance.Roles
-                    })
-
-                $result.schemas | Should -Contain 'urn:ietf:params:scim:api:messages:2.0:PatchOp'
-                $result.Operations.Count | Should -Be 1
-                $result.Operations[0].op | Should -Be 'add'
-                $result.Operations[0].path | Should -Be 'roles'
-                $result.Operations[0].value.Count | Should -Be 1
-                $result.Operations[0].value[0].value | Should -Be 'arn:aws:iam::123:instance-profile/test'
-            }
-        }
-    }
-}
-
 Describe 'DatabricksGroup\AssertProperties()' -Tag 'AssertProperties' {
     Context 'When validating properties' {
         BeforeAll {
@@ -1297,12 +1119,8 @@ Describe 'DatabricksGroup\Export()' -Tag 'Export' {
                                 @{
                                     id          = '12345'
                                     displayName = 'group1'
-                                    members     = @(
-                                        @{
-                                            value   = 'user-001'
-                                            display = 'user1@example.com'
-                                            '$ref'  = 'Users/user-001'
-                                        }
+                                    roles       = @(
+                                        @{ value = 'arn:aws:iam::123456789012:instance-profile/my-profile' }
                                     )
                                 }
                                 @{
@@ -1324,7 +1142,7 @@ Describe 'DatabricksGroup\Export()' -Tag 'Export' {
 
                 $result.Count | Should -Be 2
                 $result[0].DisplayName | Should -Be 'group1'
-                $result[0].Members.Count | Should -Be 1
+                $result[0].Roles.Count | Should -Be 1
                 $result[1].DisplayName | Should -Be 'group2'
                 $result[1].Entitlements.Count | Should -Be 1
             }
