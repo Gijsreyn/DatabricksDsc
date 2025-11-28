@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `DatabricksAccountWorkspacePermissionAssignment`
+  - Added `Export()` static methods for exporting permission assignments
+  - Supports exporting all permission assignments for a workspace
+  - Supports filtering by `PrincipalId` and `Permissions` properties
+  - Uses account-level API endpoint:
+    `/api/2.0/accounts/{account_id}/workspaces/{workspace_id}/permissionassignments`
+
 ## [0.5.0] - 2025-11-27
 
 ### Added

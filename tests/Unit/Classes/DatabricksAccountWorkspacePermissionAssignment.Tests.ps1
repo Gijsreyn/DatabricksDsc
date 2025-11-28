@@ -899,3 +899,272 @@ Describe 'DatabricksAccountWorkspacePermissionAssignment\AssertProperties()' -Ta
         }
     }
 }
+
+Describe 'DatabricksAccountWorkspacePermissionAssignment\Export()' -Tag 'Export' {
+    Context 'When exporting all permission assignments' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '0'
+                }
+
+                # Mock InvokeDatabricksApi to return permission assignments
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        return @{
+                            permission_assignments = @(
+                                @{
+                                    principal   = @{
+                                        principal_id = 1111111111
+                                        user_name    = 'user1@example.com'
+                                        display_name = 'User One'
+                                    }
+                                    permissions = @('USER')
+                                }
+                                @{
+                                    principal   = @{
+                                        principal_id = 2222222222
+                                        user_name    = 'user2@example.com'
+                                        display_name = 'User Two'
+                                    }
+                                    permissions = @('ADMIN')
+                                }
+                            )
+                        }
+                    }
+            }
+        }
+
+        It 'Should return array of permission assignment instances' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 2
+                $result[0].PrincipalId | Should -Be '1111111111'
+                $result[0].Permissions | Should -Be @('USER')
+                $result[0]._exist | Should -BeTrue
+                $result[1].PrincipalId | Should -Be '2222222222'
+                $result[1].Permissions | Should -Be @('ADMIN')
+                $result[1]._exist | Should -BeTrue
+            }
+        }
+
+        It 'Should set correct AccountId and WorkspaceId' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result[0].AccountId | Should -Be '12345678-1234-1234-1234-123456789012'
+                $result[0].WorkspaceId | Should -Be '1234567890123456'
+                $result[1].AccountId | Should -Be '12345678-1234-1234-1234-123456789012'
+                $result[1].WorkspaceId | Should -Be '1234567890123456'
+            }
+        }
+    }
+
+    Context 'When exporting with no permission assignments found' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '0'
+                }
+
+                # Mock InvokeDatabricksApi to return empty assignments
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        return @{
+                            permission_assignments = @()
+                        }
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 0
+            }
+        }
+    }
+
+    Context 'When calling Export() without parameters' {
+        It 'Should throw an exception' {
+            InModuleScope -ScriptBlock {
+                { [DatabricksAccountWorkspacePermissionAssignment]::Export() } | Should -Throw '*requires authentication*'
+            }
+        }
+    }
+
+    Context 'When filtering exported permission assignments by PrincipalId' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '1111111111'
+                }
+
+                # Mock InvokeDatabricksApi to return permission assignments
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        return @{
+                            permission_assignments = @(
+                                @{
+                                    principal   = @{
+                                        principal_id = 1111111111
+                                        user_name    = 'user1@example.com'
+                                        display_name = 'User One'
+                                    }
+                                    permissions = @('USER')
+                                }
+                                @{
+                                    principal   = @{
+                                        principal_id = 2222222222
+                                        user_name    = 'user2@example.com'
+                                        display_name = 'User Two'
+                                    }
+                                    permissions = @('ADMIN')
+                                }
+                            )
+                        }
+                    }
+            }
+        }
+
+        It 'Should return filtered results by PrincipalId' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 1
+                $result[0].PrincipalId | Should -Be '1111111111'
+                $result[0].Permissions | Should -Be @('USER')
+            }
+        }
+    }
+
+    Context 'When filtering exported permission assignments by Permissions' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '0'
+                    Permissions = @([WorkspacePermissionLevel]::Admin)
+                }
+
+                # Mock InvokeDatabricksApi to return permission assignments
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        return @{
+                            permission_assignments = @(
+                                @{
+                                    principal   = @{
+                                        principal_id = 1111111111
+                                        user_name    = 'user1@example.com'
+                                        display_name = 'User One'
+                                    }
+                                    permissions = @('USER')
+                                }
+                                @{
+                                    principal   = @{
+                                        principal_id = 2222222222
+                                        user_name    = 'user2@example.com'
+                                        display_name = 'User Two'
+                                    }
+                                    permissions = @('ADMIN')
+                                }
+                            )
+                        }
+                    }
+            }
+        }
+
+        It 'Should return filtered results by Permissions' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 1
+                $result[0].PrincipalId | Should -Be '2222222222'
+                $result[0].Permissions | Should -Be @('ADMIN')
+            }
+        }
+    }
+
+    Context 'When API returns null response' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '0'
+                }
+
+                # Mock InvokeDatabricksApi to return null
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        return $null
+                    }
+            }
+        }
+
+        It 'Should return empty array' {
+            InModuleScope -ScriptBlock {
+                $result = [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance)
+
+                $result.Count | Should -Be 0
+            }
+        }
+    }
+
+    Context 'When API call fails' {
+        BeforeAll {
+            InModuleScope -ScriptBlock {
+                $script:mockInstance = [DatabricksAccountWorkspacePermissionAssignment] @{
+                    AccountsUrl = 'https://accounts.azuredatabricks.net'
+                    AccessToken = ConvertTo-SecureString -String 'dapi1234567890abcdef' -AsPlainText -Force
+                    AccountId   = '12345678-1234-1234-1234-123456789012'
+                    WorkspaceId = '1234567890123456'
+                    PrincipalId = '0'
+                }
+
+                # Mock InvokeDatabricksApi to throw
+                $script:mockInstance |
+                    Add-Member -Force -MemberType 'ScriptMethod' -Name 'InvokeDatabricksApi' -Value {
+                        param ($Method, $Path, $Body)
+
+                        throw 'API error'
+                    }
+            }
+        }
+
+        It 'Should throw an exception' {
+            InModuleScope -ScriptBlock {
+                { [DatabricksAccountWorkspacePermissionAssignment]::Export($script:mockInstance) } | Should -Throw '*Failed to export*'
+            }
+        }
+    }
+}

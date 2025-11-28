@@ -394,4 +394,179 @@ class DatabricksAccountWorkspacePermissionAssignment : DatabricksAccountResource
             New-ArgumentException -ArgumentName 'PrincipalId' -Message $errorMessage
         }
     }
+
+    <#
+        .SYNOPSIS
+            Exports all permission assignments from the Databricks workspace.
+
+        .DESCRIPTION
+            This parameterless overload requires using Export([FilteringInstance]) instead.
+            Create a DatabricksAccountWorkspacePermissionAssignment instance with AccountsUrl,
+            AccessToken, AccountId, and WorkspaceId set, then call Export with that instance
+            to retrieve all permission assignments.
+
+        .EXAMPLE
+            $instance = [DatabricksAccountWorkspacePermissionAssignment]::new()
+            $instance.AccountsUrl = 'https://accounts.azuredatabricks.net'
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.WorkspaceId = '1234567890123456'
+            $instance.PrincipalId = '0'
+            [DatabricksAccountWorkspacePermissionAssignment]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksAccountWorkspacePermissionAssignment[]] Array of instances representing all permission assignments.
+    #>
+    static [DatabricksResourceBase[]] Export()
+    {
+        $errorMessage = 'Export() requires authentication. Create a DatabricksAccountWorkspacePermissionAssignment instance with AccountsUrl, AccessToken, AccountId, and WorkspaceId set, then call Export($instance) instead.'
+
+        throw [System.InvalidOperationException]::new($errorMessage)
+    }
+
+    <#
+        .SYNOPSIS
+            Exports permission assignments from the Databricks workspace filtered by the provided instance.
+
+        .PARAMETER FilteringInstance
+            A DatabricksAccountWorkspacePermissionAssignment instance with AccountsUrl, AccessToken,
+            AccountId, and WorkspaceId set (required). PrincipalId can be set to '0' or any placeholder.
+            Optionally set filter properties to filter results.
+            If no filter properties are set, all permission assignments are returned.
+
+        .DESCRIPTION
+            Retrieves all permission assignments from the workspace and filters them based on properties
+            set in the FilteringInstance parameter.
+
+        .EXAMPLE
+            # Export all permission assignments
+            $instance = [DatabricksAccountWorkspacePermissionAssignment]::new()
+            $instance.AccountsUrl = 'https://accounts.azuredatabricks.net'
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.WorkspaceId = '1234567890123456'
+            $instance.PrincipalId = '0'
+            [DatabricksAccountWorkspacePermissionAssignment]::Export($instance)
+
+        .EXAMPLE
+            # Export filtered permission assignments
+            $instance = [DatabricksAccountWorkspacePermissionAssignment]::new()
+            $instance.AccountsUrl = 'https://accounts.azuredatabricks.net'
+            $instance.AccessToken = $token
+            $instance.AccountId = '12345678-1234-1234-1234-123456789012'
+            $instance.WorkspaceId = '1234567890123456'
+            $instance.PrincipalId = '9876543210'
+            [DatabricksAccountWorkspacePermissionAssignment]::Export($instance)
+
+        .OUTPUTS
+            [DatabricksAccountWorkspacePermissionAssignment[]] Array of instances matching the filter criteria.
+    #>
+    static [DatabricksResourceBase[]] Export([DatabricksResourceBase] $FilteringInstance)
+    {
+        $resourceType = $FilteringInstance.GetType().Name
+
+        try
+        {
+            Write-Verbose -Message (
+                $FilteringInstance.localizedData.ExportingResources -f $resourceType
+            )
+
+            # Get all permission assignments from the workspace
+            $response = $FilteringInstance.InvokeDatabricksApi(
+                'GET',
+                "/api/2.0/accounts/$($FilteringInstance.AccountId)/workspaces/$($FilteringInstance.WorkspaceId)/permissionassignments",
+                $null
+            )
+
+            if ($null -eq $response -or $null -eq $response.permission_assignments -or $response.permission_assignments.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    $FilteringInstance.localizedData.NoResourcesFound -f $resourceType
+                )
+                return @()
+            }
+
+            # Convert each API assignment to a resource instance
+            [DatabricksResourceBase[]] $allResources = $response.permission_assignments.ForEach{
+                $assignment = $_
+
+                $exportInstance = [DatabricksAccountWorkspacePermissionAssignment]::new()
+                $exportInstance.AccountsUrl = $FilteringInstance.AccountsUrl
+                $exportInstance.AccessToken = $FilteringInstance.AccessToken
+                $exportInstance.AccountId = $FilteringInstance.AccountId
+                $exportInstance.WorkspaceId = $FilteringInstance.WorkspaceId
+                $exportInstance.PrincipalId = $assignment.principal.principal_id.ToString()
+
+                # Convert permissions array (simple string array)
+                if ($assignment.permissions)
+                {
+                    $exportInstance.Permissions = $assignment.permissions
+                }
+
+                $exportInstance._exist = $true
+
+                $exportInstance
+            }
+
+            # Get all properties from the filtering instance that have values
+            # Exclude common base properties and DSC framework properties
+            $filterProperties = $FilteringInstance.PSObject.Properties.Where{
+                $_.Name -notin @('AccountsUrl', 'WorkspaceUrl', 'AccessToken', 'Reasons', 'AccountId', 'WorkspaceId', 'localizedData', '_exist', 'ExcludeDscProperties') -and
+                -not [string]::IsNullOrEmpty($_.Value) -and
+                $_.Value -ne '0'
+            }
+
+            # If no filter properties, return all resources
+            if ($filterProperties.Count -eq 0)
+            {
+                Write-Verbose -Message (
+                    "Returning all {0} permission assignment(s)" -f $allResources.Count
+                )
+                return $allResources
+            }
+
+            # Filter resources based on the properties set in FilteringInstance
+            $filteredResources = $allResources.Where{
+                $resource = $_
+                $matches = $true
+
+                foreach ($property in $filterProperties)
+                {
+                    $resourceValue = $resource.($property.Name)
+                    $filterValue = $property.Value
+
+                    # Handle array properties (like Permissions)
+                    if ($resourceValue -is [array] -and $filterValue -is [array])
+                    {
+                        # Check if arrays have the same elements
+                        $comparison = Compare-Object -ReferenceObject $resourceValue -DifferenceObject $filterValue
+                        if ($comparison)
+                        {
+                            $matches = $false
+                            break
+                        }
+                    }
+                    elseif ($resourceValue -ne $filterValue)
+                    {
+                        $matches = $false
+                        break
+                    }
+                }
+
+                $matches
+            }
+
+            Write-Verbose -Message (
+                "Returning {0} filtered permission assignment(s)" -f $filteredResources.Count
+            )
+
+            return $filteredResources
+        }
+        catch
+        {
+            $errorMessage = "Failed to export {0} resources: {1}" -f $resourceType, $_.Exception.Message
+
+            throw [System.InvalidOperationException]::new($errorMessage, $_.Exception)
+        }
+    }
 }
