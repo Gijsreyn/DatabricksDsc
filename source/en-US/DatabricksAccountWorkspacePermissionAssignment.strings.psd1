@@ -14,4 +14,6 @@ ConvertFrom-StringData @'
     InvalidAccountId = The AccountId '{0}' is not valid. It must be a valid GUID. (DAWPA0013)
     InvalidWorkspaceId = The WorkspaceId '{0}' is not valid. It must be numeric. (DAWPA0014)
     InvalidPrincipalId = The PrincipalId '{0}' is not valid. It must be numeric. (DAWPA0015)
+    ExportingResources = Exporting {0} resources. (DAWPA0016)
+    NoResourcesFound = No {0} resources found. (DAWPA0017)
 '@
