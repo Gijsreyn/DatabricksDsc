@@ -1,0 +1,35 @@
+@{
+    GettingSecret              = "Getting secret from scope '{0}'." # DSS0001
+    ErrorGettingSecret         = "Failed to get secret from scope '{0}'. Error: {1}" # DSS0002
+    CreatingSecret             = "Creating secret '{0}' in scope '{1}'." # DSS0003
+    SecretCreated              = "Secret '{0}' created in scope '{1}'." # DSS0004
+    ErrorCreatingSecret        = "Failed to create secret '{0}' in scope '{1}'. Error: {2}" # DSS0005
+    RemovingSecret             = "Removing secret '{0}' from scope '{1}'." # DSS0006
+    SecretRemoved              = "Secret '{0}' removed from scope '{1}'." # DSS0007
+    ErrorRemovingSecret        = "Failed to remove secret '{0}' from scope '{1}'. Error: {2}" # DSS0008
+    SecretValueRequired        = "Either StringValue or BytesValue must be specified." # DSS0009
+    GetCurrentState            = "Getting current state for secret '{0}' in scope '{1}'." # DSS0010
+    SecretExists               = "Secret '{0}' exists in scope '{1}'." # DSS0011
+    SecretDoesNotExist         = "Secret '{0}' does not exist in scope '{1}'." # DSS0012
+    TestingConfiguration       = "Testing configuration for secret '{0}' in scope '{1}'." # DSS0013
+    InDesiredState             = "Secret '{0}' is in the desired state." # DSS0014
+    NotInDesiredState          = "Secret '{0}' is not in the desired state." # DSS0015
+    SecretShouldBePresent      = "Secret '{0}' should be present but is absent." # DSS0016
+    SecretShouldBeAbsent       = "Secret '{0}' should be absent but is present." # DSS0017
+    UpdatingSecret             = "Updating secret '{0}' in scope '{1}'." # DSS0018
+    CreatingNewSecret          = "Creating new secret '{0}' in scope '{1}'." # DSS0019
+    DeletingSecret             = "Deleting secret '{0}' from scope '{1}'." # DSS0020
+    ValueCannotBeChanged       = "Secret '{0}' value has changed but API does not allow validation. Secret will be recreated." # DSS0021
+    ExportingSecrets           = "Exporting secrets from workspace '{0}'." # DSS0022
+    ExportingSecretsFromScope  = "Exporting secrets from scope '{0}'." # DSS0023
+    ErrorExportingSecrets      = "Failed to export secrets. Error: {0}" # DSS0024
+    NoSecretsFound             = "No secrets found in scope '{0}'." # DSS0025
+    FoundSecrets               = "Found {0} secret(s) in scope '{1}'." # DSS0026
+    BothValuesSpecified        = "Cannot specify both StringValue and BytesValue. Only one value type is allowed." # DSS0027
+    NoValueSpecified           = "Either StringValue or BytesValue must be specified when _exist is set to true." # DSS0028
+    InvalidWorkspaceUrl        = "WorkspaceUrl '{0}' is not valid. Must start with 'https://'." # DSS0029
+    InvalidSecretKey           = "SecretKey '{0}' is not valid. Must consist of alphanumeric characters, dashes, underscores, and periods only." # DSS0030
+    ExportingResources         = "Exporting {0} resources." # DSS0031
+    NoResourcesFound           = "No {0} resources found." # DSS0032
+    ExportFailed               = "Failed to export {0} resources. Error: {1}" # DSS0033
+}
