@@ -5,6 +5,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `DatabricksSecret` resource for managing individual secrets in secret scopes
+  - Manages secrets stored in Databricks-backed secret scopes
+  - Key properties: `ScopeName`, `SecretKey`, `StringValue`/`BytesValue`
+  - Supports both string values (UTF-8) and byte values (base64-encoded)
+  - SecretKey validation: alphanumeric, dashes, underscores, periods (max 128 chars)
+  - Maximum secret size: 128 KB
+  - Note: API does not return secret values, so value changes cannot be detected
+    - Existing secrets are recreated when Set() is called to ensure desired state
+  - Uses workspace-level Secrets API:
+    - Create/Update: `POST /api/2.0/secrets/put`
+    - Delete: `POST /api/2.0/secrets/delete`
+    - List: `GET /api/2.0/secrets/list`
+  - Includes `Export()` static methods for exporting secrets
+    - Note: Secret values are not exported (not returned by API)
+    - Supports exporting all secrets from all scopes
+    - Supports filtering by `ScopeName` to export secrets from specific scope
+  - Cannot be used with Azure Key Vault-backed scopes
+  - Includes comprehensive unit tests for class and public functions
+  - Includes public functions: `Get-DatabricksSecret`, `New-DatabricksSecret`, `Remove-DatabricksSecret`
+
+- Added `DatabricksSecretScope` resource for managing secret scopes
+  - Manages both Databricks-backed and Azure Key Vault-backed secret scopes
+  - Key property: `ScopeName`
+  - Supports two backend types: `DATABRICKS` (default) and `AZURE_KEYVAULT`
+  - For Azure Key Vault scopes, requires `BackendAzureKeyVault` with DNS name
+    and resource ID
+  - Includes `AzureKeyVaultBackend` complex type implementing IComparable and IEquatable
+  - Note: API does not support updating scopes - scopes are deleted and
+    recreated on changes
+  - Uses workspace-level Secrets API:
+    - Create: `POST /api/2.0/secrets/scopes/create`
+    - Delete: `POST /api/2.0/secrets/scopes/delete`
+    - List: `GET /api/2.0/secrets/scopes/list`
+  - Includes `Export()` static methods for exporting secret scopes
+    - Supports exporting all secret scopes from workspace
+    - Supports filtering by `ScopeName` and `ScopeBackendType` properties
+  - Includes comprehensive unit tests for class and public functions
+  - Includes public functions: `Get-DatabricksSecretScope`,
+    `New-DatabricksSecretScope`, `Remove-DatabricksSecretScope`
+
 ### Changed
 
 - `DatabricksAccountWorkspacePermissionAssignment`
