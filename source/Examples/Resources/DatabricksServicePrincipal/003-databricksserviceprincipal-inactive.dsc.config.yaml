@@ -7,7 +7,7 @@ resources:
     - name: Inactive workspace service principal
       type: DatabricksDsc/DatabricksServicePrincipal
       properties:
-        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccessTokenHere>'
         ApplicationId: 'ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj'
         DisplayName: 'Inactive Service Principal'

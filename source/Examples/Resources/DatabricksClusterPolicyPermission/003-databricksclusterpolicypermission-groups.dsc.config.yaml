@@ -7,7 +7,7 @@ resources:
     - name: Group-based cluster policy permissions
       type: DatabricksDsc/DatabricksClusterPolicyPermission
       properties:
-        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccessTokenHere>'
         ClusterPolicyId: '001CC22723A9379C'
         AccessControlList:

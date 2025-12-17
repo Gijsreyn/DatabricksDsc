@@ -7,7 +7,7 @@ resources:
     - name: Complete workspace user configuration
       type: DatabricksDsc/DatabricksUser
       properties:
-        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccessTokenHere>'
         UserName: 'user@example.com'
         DisplayName: 'Example User'

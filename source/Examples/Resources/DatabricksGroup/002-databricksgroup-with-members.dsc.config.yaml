@@ -7,7 +7,7 @@ resources:
     - name: Group with entitlements
       type: DatabricksDsc/DatabricksGroup
       properties:
-        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccessTokenHere>'
         DisplayName: 'data-engineers'
         Entitlements:

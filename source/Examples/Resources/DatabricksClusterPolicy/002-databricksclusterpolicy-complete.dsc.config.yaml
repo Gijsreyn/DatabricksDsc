@@ -7,7 +7,7 @@ resources:
     - name: Complete cluster policy with multiple constraints
       type: DatabricksDsc/DatabricksClusterPolicy
       properties:
-        WorkspaceUrl: 'https://adb-953475542402434.14.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccessTokenHere>'
         Name: 'Production Cluster Policy'
         Definition:

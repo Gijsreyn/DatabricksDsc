@@ -7,7 +7,7 @@ resources:
     - name: Basic account user
       type: DatabricksDsc/DatabricksAccountUser
       properties:
-        WorkspaceUrl: 'https://accounts.azuredatabricks.net'
+        WorkspaceUrl: '<workspaceUrl>'
         AccessToken: '<YourAccountAccessTokenHere>'
         AccountId: '12345678-1234-1234-1234-123456789012'
         UserName: 'user@example.com'
