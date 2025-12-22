@@ -31,6 +31,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Includes complex types: `SqlWarehouseChannel`, `SqlWarehouseTag`, `SqlWarehouseTags`
   - Includes comprehensive unit tests for class, type definitions, and Export functionality
 
+- Added `DatabricksSqlWarehousePermission` resource for managing SQL warehouse permissions
+  - Manages permissions for SQL warehouses in a Databricks workspace
+  - Key property: `WarehouseId`
+  - Configurable properties:
+    - `AccessControlList`: Array of access control entries with:
+      - `GroupName`, `UserName`, or `ServicePrincipalName` (mutually exclusive)
+      - `PermissionLevel`: CAN_MANAGE, CAN_MONITOR, CAN_USE, CAN_VIEW, or IS_OWNER
+    - `_exist`: Set to `$false` to remove all permissions
+  - Uses workspace-level Permissions API:
+    - Get: `GET /api/2.0/permissions/sql/warehouses/{warehouse_id}`
+    - Update: `PATCH /api/2.0/permissions/sql/warehouses/{warehouse_id}`
+    - Set/Delete: `PUT /api/2.0/permissions/sql/warehouses/{warehouse_id}`
+  - Includes complex type: `SqlWarehouseAccessControlEntry`
+  - Includes comprehensive unit tests for class and type definitions
+
 - Added `DatabricksSecret` resource for managing individual secrets in secret scopes
   - Manages secrets stored in Databricks-backed secret scopes
   - Key properties: `ScopeName`, `SecretKey`, `StringValue`/`BytesValue`
