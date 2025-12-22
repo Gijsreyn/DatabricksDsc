@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `DatabricksSqlWarehouse` resource for managing SQL warehouses
+  - Manages SQL warehouses in a Databricks workspace
+  - Key property: `Name`
+  - Configurable properties:
+    - `ClusterSize`: Size of clusters (2X-Small to 4X-Large)
+    - `AutoStopMins`: Auto-stop timeout (0 for no autostop, or >= 10 minutes)
+    - `Channel`: Channel configuration with Name and DbsqlVersion
+    - `EnablePhoton`: Enable Photon optimized clusters
+    - `EnableServerlessCompute`: Enable serverless compute (requires PRO warehouse type)
+    - `MinNumClusters`/`MaxNumClusters`: Cluster scaling configuration
+    - `SpotInstancePolicy`: POLICY_UNSPECIFIED, COST_OPTIMIZED, or RELIABILITY_OPTIMIZED
+    - `Tags`: Custom tags for warehouse resources
+    - `WarehouseType`: CLASSIC, PRO, or TYPE_UNSPECIFIED
+  - Uses workspace-level SQL Warehouses API:
+    - Create: `POST /api/2.0/sql/warehouses`
+    - Update: `POST /api/2.0/sql/warehouses/{id}/edit`
+    - Delete: `DELETE /api/2.0/sql/warehouses/{id}`
+    - List: `GET /api/2.0/sql/warehouses`
+  - Includes `Export()` static method for exporting SQL warehouses
+    - Supports exporting all SQL warehouses from workspace
+    - Supports filtering by `WarehouseType`, `ClusterSize`, `EnablePhoton`, and other properties
+  - Includes complex types: `SqlWarehouseChannel`, `SqlWarehouseTag`, `SqlWarehouseTags`
+  - Includes comprehensive unit tests for class, type definitions, and Export functionality
+
 - Added `DatabricksSecret` resource for managing individual secrets in secret scopes
   - Manages secrets stored in Databricks-backed secret scopes
   - Key properties: `ScopeName`, `SecretKey`, `StringValue`/`BytesValue`
