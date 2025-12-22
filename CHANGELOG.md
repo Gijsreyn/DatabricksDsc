@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-22
+
 ### Added
 
 - Added `DatabricksSqlWarehouse` resource for managing SQL warehouses
@@ -85,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Includes comprehensive unit tests for class and public functions
   - Includes public functions: `Get-DatabricksSecretScope`,
     `New-DatabricksSecretScope`, `Remove-DatabricksSecretScope`
+
+## [0.6.0] - 2025-11-28
 
 ### Changed
 
