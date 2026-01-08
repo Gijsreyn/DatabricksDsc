@@ -1,0 +1,17 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure group ruleset with admin access
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Group ruleset for data team
+      type: DatabricksDsc/DatabricksAccountRuleset
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        Name: 'accounts/12345678-1234-1234-1234-123456789012/groups/12345/ruleSets/default'
+        GrantRules:
+        - Principals:
+          - 'users/admin@company.com'
+          Role: 'roles/group.admin'

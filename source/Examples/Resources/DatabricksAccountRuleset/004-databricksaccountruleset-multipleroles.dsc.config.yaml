@@ -1,0 +1,21 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure ruleset with multiple grant rules
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Multiple role assignments for service principal
+      type: DatabricksDsc/DatabricksAccountRuleset
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccountAccessTokenHere>'
+        AccountId: '12345678-1234-1234-1234-123456789012'
+        Name: 'accounts/12345678-1234-1234-1234-123456789012/servicePrincipals/a1b2c3d4-e5f6-7890-abcd-ef1234567890/ruleSets/default'
+        GrantRules:
+        - Principals:
+          - 'users/poweruser@company.com'
+          - 'groups/admins'
+          Role: 'roles/servicePrincipal.user'
+        - Principals:
+          - 'users/admin@company.com'
+          Role: 'roles/servicePrincipal.admin'

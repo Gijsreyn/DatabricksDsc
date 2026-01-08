@@ -1,0 +1,17 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure notebook permissions for data engineering team
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Notebook permissions with CAN_RUN access
+      type: DatabricksDsc/DatabricksWorkspaceObjectPermission
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccessTokenHere>'
+        WorkspacePath: '/Shared/ETL/data-pipeline'
+        AccessControlList:
+        - GroupName: 'data-engineers'
+          PermissionLevel: 'CAN_RUN'
+        - UserName: 'admin@company.com'
+          PermissionLevel: 'CAN_MANAGE'

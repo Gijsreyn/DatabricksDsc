@@ -1,0 +1,18 @@
+ConvertFrom-StringData @'
+    Get_WorkspaceObjectPermission_EvaluatingPermissions = Evaluating permissions for workspace object '{0}'. (DWOP0001)
+    Get_WorkspaceObjectPermission_PermissionsFound = Found {0} permission(s) for workspace object '{1}'. (DWOP0002)
+    Get_WorkspaceObjectPermission_NoPermissions = No permissions found for workspace object '{0}'. (DWOP0003)
+    Get_WorkspaceObjectPermission_ErrorGettingPermissions = Failed to get permissions for workspace object '{0}': {1}. (DWOP0004)
+    Set_WorkspaceObjectPermission_UpdatingPermissions = Updating {0} permission(s) for workspace object '{1}'. (DWOP0005)
+    Set_WorkspaceObjectPermission_PermissionsUpdated = Successfully updated {0} permission(s) for workspace object '{1}'. (DWOP0006)
+    Set_WorkspaceObjectPermission_ErrorUpdatingPermissions = Failed to update permissions for workspace object '{0}': {1}. (DWOP0007)
+    Set_WorkspaceObjectPermission_RemovingPermissions = Removing all permissions for workspace object '{0}'. (DWOP0008)
+    Set_WorkspaceObjectPermission_PermissionsRemoved = Successfully removed all permissions for workspace object '{0}'. (DWOP0009)
+    Set_WorkspaceObjectPermission_ErrorRemovingPermissions = Failed to remove permissions for workspace object '{0}': {1}. (DWOP0010)
+    Resolve_WorkspaceObject_ResolvingPath = Resolving workspace object path '{0}'. (DWOP0011)
+    Resolve_WorkspaceObject_Resolved = Resolved workspace object: ID={0}, Type={1}, PermissionType={2}. (DWOP0012)
+    Resolve_WorkspaceObject_ObjectNotFound = Workspace object not found at path '{0}'. (DWOP0013)
+    Resolve_WorkspaceObject_UnsupportedType = Unsupported workspace object type '{0}'. Only DIRECTORY, NOTEBOOK, and REPO are supported. (DWOP0014)
+    Set_WorkspaceObjectPermission_RemovingSpecificPermissions = Removing {0} specific permission(s) for workspace object '{1}'. (DWOP0015)
+    Set_WorkspaceObjectPermission_SpecificPermissionsRemoved = Successfully removed {0} specific permission(s) for workspace object '{1}'. (DWOP0016)
+'@

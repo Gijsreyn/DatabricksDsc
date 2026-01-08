@@ -1,0 +1,17 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure permissions for Git repository
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Repository permissions for development team
+      type: DatabricksDsc/DatabricksWorkspaceObjectPermission
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccessTokenHere>'
+        WorkspacePath: '/Repos/my-team/ml-project'
+        AccessControlList:
+        - GroupName: 'ml-engineers'
+          PermissionLevel: 'CAN_EDIT'
+        - ServicePrincipalName: 'ci-cd-pipeline'
+          PermissionLevel: 'CAN_READ'
