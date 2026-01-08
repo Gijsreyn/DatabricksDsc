@@ -234,7 +234,11 @@ class DatabricksWorkspaceObjectPermission : DatabricksResourceBase
     #>
     hidden [void] Modify([System.Collections.Hashtable] $properties)
     {
-        if ($properties._exist -eq $false)
+        # Check if we're removing permissions (_exist = false)
+        # Use $properties._exist if provided, otherwise fall back to $this._exist
+        $removePermissions = if ($properties.ContainsKey('_exist')) { $properties._exist -eq $false } else { $this._exist -eq $false }
+
+        if ($removePermissions)
         {
             # Ensure object is resolved
             if (-not $this._objectId)
@@ -245,12 +249,15 @@ class DatabricksWorkspaceObjectPermission : DatabricksResourceBase
             $apiPath = "/api/2.0/permissions/$($this._permissionObjectType)/$($this._objectId)"
 
             # Check if we're removing specific principals or all permissions
-            if ($properties.ContainsKey('AccessControlList') -and $properties.AccessControlList.Count -gt 0)
+            # Use AccessControlList from $properties if provided, otherwise use $this.AccessControlList
+            $aclToRemove = if ($properties.ContainsKey('AccessControlList')) { $properties.AccessControlList } else { $this.AccessControlList }
+
+            if ($aclToRemove -and $aclToRemove.Count -gt 0)
             {
                 # Remove specific principals - get current permissions and filter them out
                 Write-Verbose -Message (
                     $this.localizedData.Set_WorkspaceObjectPermission_RemovingSpecificPermissions -f @(
-                        $properties.AccessControlList.Count,
+                        $aclToRemove.Count,
                         $this.WorkspacePath
                     )
                 )
@@ -270,7 +277,7 @@ class DatabricksWorkspaceObjectPermission : DatabricksResourceBase
                     {
                         # Build list of principals to remove
                         $principalsToRemove = @()
-                        foreach ($ace in $properties.AccessControlList)
+                        foreach ($ace in $aclToRemove)
                         {
                             if ($ace.GroupName)
                             {
@@ -356,7 +363,7 @@ class DatabricksWorkspaceObjectPermission : DatabricksResourceBase
 
                     Write-Verbose -Message (
                         $this.localizedData.Set_WorkspaceObjectPermission_SpecificPermissionsRemoved -f @(
-                            $properties.AccessControlList.Count,
+                            $aclToRemove.Count,
                             $this.WorkspacePath
                         )
                     )
