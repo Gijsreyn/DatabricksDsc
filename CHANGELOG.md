@@ -5,6 +5,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `DatabricksWorkspaceObjectPermission` resource for managing workspace object permissions
+  - Manages permissions for workspace objects such as notebooks, directories, and repos
+  - Key property: `WorkspacePath` (e.g., '/Shared/notebook', '/Repos/my-repo', '/Users/user@example.com/folder')
+  - Configurable properties:
+    - `AccessControlList`: Array of access control entries with:
+      - `GroupName`, `UserName`, or `ServicePrincipalName` (mutually exclusive)
+      - `PermissionLevel`: CAN_MANAGE, CAN_READ, CAN_RUN, or CAN_EDIT
+    - `_exist`: Set to `$false` to remove all permissions
+  - Automatically resolves workspace paths to object IDs and types using workspace/get-status API
+  - Uses workspace-level Permissions API:
+    - Get: `GET /api/2.0/permissions/{object_type}/{object_id}`
+    - Update: `PATCH /api/2.0/permissions/{object_type}/{object_id}`
+    - Delete: `PUT /api/2.0/permissions/{object_type}/{object_id}` with empty ACL
+  - Includes complex type: `WorkspaceObjectAccessControlEntry` (with IComparable and IEquatable)
+  - Includes enum: `WorkspaceObjectPermissionLevel`
+  - Includes comprehensive unit tests for class and type definitions
+  - Includes example configurations for notebooks, directories, and repositories
+- Added `DatabricksAccountRuleset` resource for managing account access control rule sets
+  - Manages rule sets that control access to account-level resources (service principals, groups, tag policies)
+  - Key properties: `Name` (full rule set name in format: accounts/<ACCOUNT_ID>/resourceType/<RESOURCE_ID>/ruleSets/default)
+  - Configurable properties:
+    - `GrantRules`: Array of grant rules defining access permissions with:
+      - `Principals`: Array of principal identifiers (e.g., "users/user@company.com", "groups/groupname")
+      - `Role`: The role being granted (e.g., "roles/servicePrincipal.user")
+  - Uses account-level Access Control Proxy API (preview):
+    - Get: `GET /api/2.0/preview/accounts/access-control/rule-sets`
+    - Update: `PUT /api/2.0/preview/accounts/access-control/rule-sets`
+  - Follows read-modify-write pattern with ETags for optimistic concurrency control
+  - Implements intelligent rule merging:
+    - Get() returns all grant rules from the rule set
+    - Set() preserves existing grant rules not managed by this resource
+    - Only updates/replaces grant rules with matching roles specified in GrantRules property
+    - Prevents accidental deletion of rules managed by other resources or processes
+  - Includes complex type: `RulesetGrantRule`
+  - Includes comprehensive unit tests for class and type definitions
+  - Includes example configurations for service principals, groups, and multiple roles
+  - Note: No delete or export methods as rule sets can only be updated
+
 ## [0.7.0] - 2025-12-22
 
 ### Added

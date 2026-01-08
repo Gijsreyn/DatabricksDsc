@@ -1,0 +1,19 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure complete permissions for workspace directory with multiple principals
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Complete workspace object permission configuration
+      type: DatabricksDsc/DatabricksWorkspaceObjectPermission
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccessTokenHere>'
+        WorkspacePath: '/Users/admin@company.com/projects'
+        AccessControlList:
+        - UserName: 'user@example.com'
+          PermissionLevel: 'CAN_READ'
+        - GroupName: 'data-team'
+          PermissionLevel: 'CAN_EDIT'
+        - ServicePrincipalName: '6c81d91b-397d-4f70-871a-d07e84689edc'
+          PermissionLevel: 'CAN_MANAGE'

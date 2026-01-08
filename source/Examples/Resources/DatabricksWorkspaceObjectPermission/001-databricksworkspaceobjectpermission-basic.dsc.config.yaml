@@ -1,0 +1,15 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+- name: Configure permissions for workspace notebook with single user
+  type: Microsoft.DSC/PowerShell
+  properties:
+    resources:
+    - name: Basic workspace object permission
+      type: DatabricksDsc/DatabricksWorkspaceObjectPermission
+      properties:
+        WorkspaceUrl: '<databricksUrl>'
+        AccessToken: '<YourAccessTokenHere>'
+        WorkspacePath: '/Shared/my-notebook'
+        AccessControlList:
+        - UserName: 'user@example.com'
+          PermissionLevel: 'CAN_READ'
