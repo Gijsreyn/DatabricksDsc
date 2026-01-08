@@ -177,7 +177,7 @@ class DatabricksWorkspaceObjectPermission : DatabricksResourceBase
                         }
 
                         $entry = [WorkspaceObjectAccessControlEntry]::new()
-                        $entry.PermissionLevel = $permission.permission_level
+                        $entry.PermissionLevel = [WorkspaceObjectPermissionLevel] $permission.permission_level
 
                         if ($ace.group_name)
                         {
