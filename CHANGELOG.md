@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-12-12
+
 ### Added
 
 - Added `DatabricksWorkspaceObjectPermission` resource for managing workspace object permissions
